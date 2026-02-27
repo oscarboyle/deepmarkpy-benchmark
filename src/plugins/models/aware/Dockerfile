@@ -1,0 +1,32 @@
+FROM ml-services-base:latest
+
+# Set ARG for build-time use defaults
+ARG APP_PORT=9004
+ENV APP_PORT=${AWARE_PORT}
+
+ARG HOST="0.0.0.0"
+ENV HOST=${HOST}
+
+# Install AWARE package from local clone
+COPY src/plugins/models/aware/aware /app/aware
+WORKDIR /app/aware
+RUN pip install --no-cache-dir -e .
+
+# Go back to app directory
+WORKDIR /app
+
+# Install service-specific dependencies
+COPY /src/plugins/models/aware/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
+COPY src/plugins/models/aware/app.py .
+COPY src/plugins/models/aware/model.py .
+COPY src/plugins/models/aware/config.json .
+COPY src/utils ./utils
+
+# Expose the port defined by the build argument/environment variable
+EXPOSE ${APP_PORT}
+
+# Run the FastAPI server using Uvicorn
+CMD uvicorn app:app --host=$HOST --port=$APP_PORT
