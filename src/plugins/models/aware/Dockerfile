@@ -7,10 +7,13 @@ ENV APP_PORT=${AWARE_PORT}
 ARG HOST="0.0.0.0"
 ENV HOST=${HOST}
 
-# Install AWARE package from local clone
-COPY src/plugins/models/aware/aware /app/aware
-WORKDIR /app/aware
-RUN pip install --no-cache-dir -e .
+# Install git for cloning
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
+# Clone and install AWARE package
+WORKDIR /app
+RUN git clone https://github.com/deepmarkpy/aware.git aware && \
+    cd aware && pip install --no-cache-dir -e .
 
 # Go back to app directory
 WORKDIR /app
