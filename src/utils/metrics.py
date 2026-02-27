@@ -81,7 +81,7 @@ def si_sdr(reference: np.ndarray, estimate: np.ndarray) -> float:
     return si_sdr_value
     
 
-def stoi_wrapper(reference: np.ndarray, degraded: np.ndarray, 
+def stoi_wrapper(reference: np.ndarray, degraded: np.ndarray,
                     fs: int = 16000) -> float:
         """
         Simplified Short-Time Objective Intelligibility (STOI) implementation.
@@ -89,28 +89,52 @@ def stoi_wrapper(reference: np.ndarray, degraded: np.ndarray,
             reference: Clean reference signal
             degraded: Degraded signal
             fs: Sampling frequency (Hz)
-          
+
         Returns:
-            STOI score (0-1, higher is better)
+            STOI score (0-1, higher is better), or None if calculation fails
         """
         reference, degraded = trim_audio_to_match(reference, degraded)
-        return stoi(reference, degraded, fs)
+
+        # STOI requires minimum audio length
+        min_samples = fs // 4
+        if len(reference) < min_samples or len(degraded) < min_samples:
+            print(f"STOI: Audio too short ({len(reference)} samples), skipping")
+            return None
+
+        try:
+            return stoi(reference, degraded, fs)
+        except Exception as e:
+            print(f"STOI calculation failed: {e}")
+            return None
 
 
 
-def pesq_wrapper(reference: np.ndarray, degraded: np.ndarray, 
+def pesq_wrapper(reference: np.ndarray, degraded: np.ndarray,
                      fs: int = 16000, mode: str = 'wb') -> float:
     """
     PESQ - Perceptual Evaluation of Speech Quality.
-        
+
     Args:
         reference: Reference signal
         degraded: Degraded signal
         fs: Sampling rate (8000 or 16000 Hz)
         mode: 'wb' (wideband) for 16kHz or 'nb' (narrowband) for 8kHz
-        
+
     Returns:
-        PESQ score (narrowband: 0.5-4.5, wideband: 1.0-4.5)
+        PESQ score (narrowband: 0.5-4.5, wideband: 1.0-4.5), or None if calculation fails
     """
+    if fs not in [8000, 16000]:
+        return None
     reference, degraded = trim_audio_to_match(reference, degraded)
-    return pesq(fs, reference, degraded, mode)
+
+    # PESQ requires minimum audio length (roughly 0.25 seconds)
+    min_samples = fs // 4
+    if len(reference) < min_samples or len(degraded) < min_samples:
+        print(f"PESQ: Audio too short ({len(reference)} samples), skipping")
+        return None
+
+    try:
+        return pesq(fs, reference, degraded, mode)
+    except Exception as e:
+        print(f"PESQ calculation failed: {e}")
+        return None
