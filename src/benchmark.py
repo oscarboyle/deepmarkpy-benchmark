@@ -181,7 +181,6 @@ class Benchmark:
                 watermarked_path = os.path.join(output_dir, watermarked_filename)
                 sf.write(watermarked_path, watermarked_audio, sampling_rate)
 
-
             # Apply each attack and compute metrics
             for attack_name in attack_types:
                 if attack_name not in self.attacks:
@@ -230,11 +229,14 @@ class Benchmark:
                             audio, **attack_kwargs
                         )
 
-                #attacked_audio_metrics=np.squeeze(attacked_audio_metrics)
+                if (calculate_quality_metrics and attack_name =="SpeechEnhancement2Attack"):
+                   attacked_audio_metrics = np.squeeze(attacked_audio_metrics)
                 # Save attacked audio
                 if save_audio:
                     logger.info(attacked_audio.shape)
                     logger.info(type(attacked_audio))
+                    if (attack_name =="SpeechEnhancement2Attack"):
+                        attacked_audio = np.squeeze(attacked_audio)  # (1, N) or (N, 1) -> (N,)
                     if attacked_audio.ndim == 1:
                         attacked_audio = np.expand_dims(attacked_audio, axis=1)
                     attacked_filename = f"{base_filename}_{attack_name}.wav"
@@ -246,7 +248,10 @@ class Benchmark:
                 if isinstance(attacked_audio, np.ndarray):
                     attacked_audio = attacked_audio.squeeze()   # (N,1) -> (N,)
                     #attacked_audio = attacked_audio.tolist()
-                detected_message = model_instance.detect(attacked_audio, sampling_rate)
+                if  (wm_model=="AudioSealModel" or wm_model=="AwareModel"):
+                    detected_message, _ = model_instance.detect(attacked_audio, sampling_rate)
+                else:
+                    detected_message = model_instance.detect(attacked_audio, sampling_rate)
 
                 if (attack_name =="CrossModelAttack"):
                     different_detected_message = different_model_instance.detect(attacked_audio, sampling_rate)
@@ -255,6 +260,10 @@ class Benchmark:
                             different_accuracy = different_detected_message.tolist()
                         else:
                             different_accuracy = different_detected_message
+                    elif (different_model_name=="AudioSealModel" or wm_model=="AwareModel"):
+                        # AwareModel returns (watermark, confidence) tuple
+                        different_watermark_detected, _ = different_detected_message
+                        different_accuracy = self.compare_watermarks(different_watermark, different_watermark_detected)
                     else:
                         different_accuracy = self.compare_watermarks(different_watermark, different_detected_message)
                 
@@ -342,10 +351,18 @@ class Benchmark:
             detected (np.ndarray): The detected binary watermark.
 
         Returns:
-            float: The accuracy of the detected watermark (percentage).
+            float: The accuracy of the detected watermark (percentage), or None if invalid.
         """
-        if (detected is None) or (np.any(detected == np.array(None))):
-            logger.info("Watermark detection returned None.")
+        if detected is None:
+            return 50.00
+        if isinstance(detected, np.ndarray) and detected.ndim == 0:
+            return 50.00
+        if isinstance(detected, (list, np.ndarray)) and len(detected) == 0:
+            return 50.00
+        if np.any(detected == np.array(None)):
+            return 50.00
+        # Check for shape mismatch
+        if len(original) != len(detected):
             return 50.00
         matches = np.sum(original == detected)
         return (matches / len(original)) * 100

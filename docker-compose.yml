@@ -27,6 +27,15 @@ services:
     environment:
       - APP_PORT=${WAVMARK_PORT}
 
+  aware:
+    build:
+      context: .
+      dockerfile: src/plugins/models/aware/Dockerfile
+    ports:
+      - "${AWARE_PORT}:${AWARE_PORT}"
+    environment:
+      - APP_PORT=${AWARE_PORT}
+
   vae:
     build:
       context: .
@@ -63,14 +72,25 @@ services:
     environment:
       - APP_PORT=${NEURAL_VOCODER_PORT}
 
-  speech_enhancement:
+  speech_enhancement1:
     build:
       context: .
-      dockerfile: src/plugins/attacks/speech_enhancement/Dockerfile
+      dockerfile: src/plugins/attacks/speech_enhancement_1/Dockerfile
     ports:
-      - "${SPEECH_ENHANCEMENT_PORT}:${SPEECH_ENHANCEMENT_PORT}"
+      - "${SPEECH_ENHANCEMENT_PORT1}:${SPEECH_ENHANCEMENT_PORT1}"
     environment:
-      - APP_PORT=${SPEECH_ENHANCEMENT_PORT}
+      - APP_PORT=${SPEECH_ENHANCEMENT_PORT1}
+
+  speech_enhancement2:
+    build:
+      context: .
+      dockerfile: src/plugins/attacks/speech_enhancement_2/Dockerfile
+    ports:
+      - "${SPEECH_ENHANCEMENT_PORT2}:${SPEECH_ENHANCEMENT_PORT2}"
+    environment:
+      - APP_PORT=${SPEECH_ENHANCEMENT_PORT2}
+    mem_limit: 12g
+    memswap_limit: 16g
   
   timbrewm:
     build:
@@ -89,3 +109,15 @@ services:
       - "${PERTH_PORT}:${PERTH_PORT}"
     environment:
       - APP_PORT=${PERTH_PORT}
+
+
+  network_transmission:
+    build:
+      context: .
+      dockerfile: src/plugins/attacks/network_transmission/Dockerfile
+    ports:
+      - "${NETWORK_TRANSMISSION_PORT}:${NETWORK_TRANSMISSION_PORT}"
+    environment:
+      - NETWORK_TRANSMISSION_PORT=${NETWORK_TRANSMISSION_PORT}
+    cap_add:
+      - NET_ADMIN
