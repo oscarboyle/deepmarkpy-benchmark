@@ -10,6 +10,7 @@ ENV HOST="0.0.0.0"
 # - libopus-dev: opus library
 # - libsndfile1: for soundfile
 # - swig, build-essential, python3-dev: for building python-webrtc-audio-processing
+# - git: for initializing submodules
 RUN apt-get update && apt-get install -y --no-install-recommends \
     iproute2 \
     opus-tools \
@@ -20,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     libc++-dev \
     libc++abi-dev \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -27,9 +29,12 @@ WORKDIR /app
 COPY src/plugins/attacks/network_transmission/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Build and install python-webrtc-audio-processing
-COPY src/plugins/attacks/network_transmission/python-webrtc-audio-processing /tmp/python-webrtc-audio-processing
-RUN cd /tmp/python-webrtc-audio-processing && \
+# Build and install python-webrtc-audio-processing (clone from fork with cross-platform support)
+RUN git clone https://github.com/nesovicelena/python-webrtc-audio-processing.git /tmp/python-webrtc-audio-processing && \
+    cd /tmp/python-webrtc-audio-processing && \
+    # Clone webrtc-audio-processing submodule (pinned to compatible commit)
+    git clone https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing.git webrtc-audio-processing && \
+    cd webrtc-audio-processing && git checkout ee8cfef49b8417c2f0ba65a249d2ee8c360d19ab && cd .. && \
     python setup.py build && \
     python setup.py install && \
     rm -rf /tmp/python-webrtc-audio-processing

@@ -1,3 +1,0 @@
-[submodule "src/plugins/attacks/network_transmission/python-webrtc-audio-processing"]
-	path = src/plugins/attacks/network_transmission/python-webrtc-audio-processing
-	url = https://github.com/xiongyihui/python-webrtc-audio-processing.git
