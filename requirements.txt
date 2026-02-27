@@ -69,3 +69,6 @@ urllib3==2.5.0
 uvicorn==0.35.0
 pystoi
 pesq
+encodec
+descript-audio-codec
+audiocomplib
