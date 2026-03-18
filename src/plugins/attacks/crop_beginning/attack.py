@@ -2,11 +2,8 @@ import numpy as np
 
 from core.base_attack import BaseAttack
 
-import logging
-logger = logging.getLogger(__name__)
 
-
-class CropAttack(BaseAttack):
+class CropBeginningAttack(BaseAttack):
     def apply(self, audio: np.ndarray, **kwargs) -> np.ndarray:
         """
         Perform a crop attack by cropping a percentage of the beginning of the audio.
@@ -25,7 +22,7 @@ class CropAttack(BaseAttack):
         """
         sampling_rate = kwargs.get("sampling_rate", None)
         crop_percentage = kwargs.get(
-            "crop_percentage", self.config.get("crop_percentage", 10)
+            "crop_percentage_beginning", self.config.get("crop_percentage_beginning", 10)
         )
 
         if sampling_rate is None:
@@ -37,7 +34,5 @@ class CropAttack(BaseAttack):
 
         start_index = samples_to_crop_per_side
         cropped_audio = audio[start_index:]
-
-        logger.info(f"Crop: removed {samples_to_crop_per_side} samples from each end, keeping {len(cropped_audio)} samples")
 
         return cropped_audio
