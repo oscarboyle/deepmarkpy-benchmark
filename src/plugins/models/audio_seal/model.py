@@ -25,6 +25,8 @@ class AudioSealModel(BaseModel):
         self, audio: np.ndarray, watermark_data: np.ndarray, sampling_rate: int
     ) -> np.ndarray:
         """Embeds a watermark into the audio using the AudioSeal service."""
+        # Sanitize audio: replace NaN with 0 and clip Inf to valid float range
+        audio = np.nan_to_num(audio, nan=0.0, posinf=1.0, neginf=-1.0)
         payload = {
             "audio": audio.tolist(),
             "watermark_data": watermark_data.tolist(),
@@ -41,6 +43,8 @@ class AudioSealModel(BaseModel):
 
     def detect(self, audio: np.ndarray, sampling_rate: int) -> np.ndarray:
         """Detects a watermark in the audio using the AudioSeal service."""
+        # Sanitize audio: replace NaN with 0 and clip Inf to valid float range
+        audio = np.nan_to_num(audio, nan=0.0, posinf=1.0, neginf=-1.0)
         payload = {"audio": audio.tolist(), "sampling_rate": sampling_rate}
         
         response_data = self._make_request(endpoint="/detect", json_data=payload, method="POST")
@@ -49,6 +53,6 @@ class AudioSealModel(BaseModel):
             logger.error("'/detect' response did not contain 'watermark' key.")
             raise KeyError("Missing 'watermark' in response from /detect")
         
-        return np.array(response_data["watermark"])
+        return np.array(response_data["watermark"]), float(response_data.get("confidence", 0.0))
         
  

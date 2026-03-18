@@ -52,6 +52,9 @@ async def embed(request: EmbedRequest):
     if sampling_rate != config["sampling_rate"]:
         watermarked_audio = resample_audio(watermarked_audio, config["sampling_rate"], sampling_rate)
 
+    # Sanitize to ensure JSON serialization works
+    watermarked_audio = np.nan_to_num(watermarked_audio, nan=0.0, posinf=0.0, neginf=0.0)
+
     return {"watermarked_audio": watermarked_audio.tolist()}
 
 
@@ -64,7 +67,17 @@ async def detect(request: DetectRequest):
     if sampling_rate != config["sampling_rate"]:
         audio = resample_audio(request.audio, sampling_rate, config["sampling_rate"])
 
-    message = model.get_watermark(audio, config["sampling_rate"], round = False)    
+    message = model.get_watermark(audio, config["sampling_rate"], round = False)
     if isinstance(message, np.ndarray) and message.ndim == 0:
         message = message.item() # Converts a 0-d NumPy array to its scalar equivalent
+
+    # Sanitize to ensure JSON serialization works
+    if isinstance(message, np.ndarray):
+        message = np.nan_to_num(message, nan=0.0, posinf=0.0, neginf=0.0)
+        message = message.tolist()
+    elif isinstance(message, float):
+        import math
+        if math.isnan(message) or math.isinf(message):
+            message = 0.0
+
     return {"watermark": message}

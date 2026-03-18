@@ -25,6 +25,8 @@ class AwareModel(BaseModel):
         self, audio: np.ndarray, watermark_data: np.ndarray, sampling_rate: int
     ) -> np.ndarray:
         """Embeds a watermark into the audio using the AWARE service."""
+        # Sanitize audio: replace NaN with 0 and clip Inf to valid float range
+        audio = np.nan_to_num(audio, nan=0.0, posinf=1.0, neginf=-1.0)
         payload = {
             "audio": audio.tolist(),
             "watermark_data": watermark_data.tolist(),
@@ -47,6 +49,8 @@ class AwareModel(BaseModel):
 
     def detect(self, audio: np.ndarray, sampling_rate: int):
         """Detects a watermark in the audio using the AWARE service."""
+        # Sanitize audio: replace NaN with 0 and clip Inf to valid float range
+        audio = np.nan_to_num(audio, nan=0.0, posinf=1.0, neginf=-1.0)
         payload = {"audio": audio.tolist(), "sampling_rate": sampling_rate}
 
         response_data = self._make_request(endpoint="/detect", json_data=payload, method="POST")
