@@ -14,7 +14,11 @@ class ZeroBitCollusionAttack(BaseAttack):
                 - sampling_rate (int): The sampling rate of the audio signal in Hz (required).
                 - original_audio_collusion (np.ndarray): The original audio signal, that's not watermarked.
                 - x (int): percentage of the non_watermarked_audio.
-                - position (string): possibilities are ['random','front','end']. This explains how parts of the watermarked signal are replaced by using the original signal.
+                - position (string): possibilities are ['random_samples','random_segment','front','end']. This explains how parts of the watermarked signal are replaced by using the original signal.
+                    - 'random_samples': replaces random individual samples
+                    - 'random_segment': replaces a contiguous segment at a random position
+                    - 'front': replaces samples from the beginning
+                    - 'end': replaces samples from the end
         Returns:
             np.ndarray: The processed audio signal.
 
@@ -31,8 +35,8 @@ class ZeroBitCollusionAttack(BaseAttack):
         )
         position = kwargs.get("position", self.config.get("position"))
 
-        if position not in ["random","front","end"]:
-            raise ValueError(f"Invalid position: '{position}'. Must be one of 'random', 'front', or 'end'.")
+        if position not in ["random_samples", "random_segment", "front", "end"]:
+            raise ValueError(f"Invalid position: '{position}'. Must be one of 'random_samples', 'random_segment', 'front', or 'end'.")
        
         if sampling_rate is None:
             raise ValueError("'sampling_rate' must be provided in kwargs.")
@@ -65,8 +69,15 @@ class ZeroBitCollusionAttack(BaseAttack):
             audio_second_part = original_audio[-num_samples:]
             reconstructed_audio = np.concatenate((audio_first_part, audio_second_part), axis=0)
             
-        elif (position=="random"):
+        elif (position=="random_samples"):
             replace_indices = np.random.choice(min_len, size=num_samples, replace=False)
             reconstructed_audio[replace_indices] = original_audio[replace_indices]
+
+        elif (position=="random_segment"):
+            # Replace a contiguous segment at a random position
+            max_start = min_len - num_samples
+            start_index = np.random.randint(0, max_start + 1)
+            end_index = start_index + num_samples
+            reconstructed_audio[start_index:end_index] = original_audio[start_index:end_index]
 
         return reconstructed_audio
