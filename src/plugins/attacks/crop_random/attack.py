@@ -16,7 +16,7 @@ class CropRandomAttack(BaseAttack):
             audio (np.ndarray): Input audio signal.
             **kwargs: Additional parameters.
                 - sampling_rate (int): Sampling rate of the audio in Hz (required).
-                - crop_percentage (float): Percentage of audio to remove. Default is 10.
+                - crop_percentage_random (float): Percentage of audio to remove. Default is 10.
 
         Returns:
             np.ndarray: Audio signal with a portion cropped from a random position.

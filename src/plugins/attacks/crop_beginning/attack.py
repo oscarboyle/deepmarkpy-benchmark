@@ -12,7 +12,7 @@ class CropBeginningAttack(BaseAttack):
             audio (np.ndarray): Input audio signal.
             **kwargs: Additional parameters.
                 - sampling_rate (int): Sampling rate of the audio in Hz (required).
-                - crop_percentage (float): Total percentage to crop. Default is 10.
+                - crop_percentage_beginning (float): Total percentage to crop. Default is 10.
 
         Returns:
             np.ndarray: Audio signal with portions cropped from both ends.
