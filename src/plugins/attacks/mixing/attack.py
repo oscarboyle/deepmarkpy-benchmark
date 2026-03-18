@@ -47,7 +47,7 @@ class MixingAttack(BaseAttack):
 
 
     def _k_weighting_filter(self, audio, sr):
-        """Apply K-weighting filter for LUFS measurement (ITU-R BS.1770).
+        """Apply K-weighting filter for LUFS measurement.
 
         K-weighting consists of:
         1. High-shelf filter (+4dB above 1500Hz)
@@ -98,9 +98,6 @@ class MixingAttack(BaseAttack):
 
     def _detect_voice_activity_lufs(self, audio, sr, threshold=-40, window_seconds=0.4):
         """Detect voice activity using short-term LUFS (Loudness Units Full Scale).
-
-        Based on ITU-R BS.1770 standard for perceived loudness measurement.
-
         Args:
             audio: Input audio signal
             sr: Sample rate
