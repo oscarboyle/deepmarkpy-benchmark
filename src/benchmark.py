@@ -173,14 +173,13 @@ class Benchmark:
             # Embed watermark
             watermarked_audio = model_instance.embed(
                 audio=audio, watermark_data=watermark_data, sampling_rate=sampling_rate
-            )
+            ) 
 
             # Save watermarked audio
             if save_audio:
                 watermarked_filename = f"{base_filename}_watermarked.wav"
                 watermarked_path = os.path.join(output_dir, watermarked_filename)
-                sf.write(watermarked_path, watermarked_audio, sampling_rate)
-
+                sf.write(watermarked_path, watermarked_audio, sampling_rate) 
             # Apply each attack and compute metrics
             for attack_name in attack_types:
                 if attack_name not in self.attacks:
@@ -248,8 +247,10 @@ class Benchmark:
                 if isinstance(attacked_audio, np.ndarray):
                     attacked_audio = attacked_audio.squeeze()   # (N,1) -> (N,)
                     #attacked_audio = attacked_audio.tolist()
-                if  (wm_model=="AudioSealModel" or wm_model=="AwareModel"):
-                    detected_message, _ = model_instance.detect(attacked_audio, sampling_rate)
+
+                confidence = None
+                if wm_model == "AudioSealModel" or wm_model == "AwareModel":
+                    detected_message, confidence = model_instance.detect(attacked_audio, sampling_rate)
                 else:
                     detected_message = model_instance.detect(attacked_audio, sampling_rate)
 
@@ -260,8 +261,8 @@ class Benchmark:
                             different_accuracy = different_detected_message.tolist()
                         else:
                             different_accuracy = different_detected_message
-                    elif (different_model_name=="AudioSealModel" or wm_model=="AwareModel"):
-                        # AwareModel returns (watermark, confidence) tuple
+                    elif (different_model_name=="AudioSealModel" or different_model_name=="AwareModel"):
+                        # AudioSealModel/AwareModel returns (watermark, confidence) tuple
                         different_watermark_detected, _ = different_detected_message
                         different_accuracy = self.compare_watermarks(different_watermark, different_watermark_detected)
                     else:
@@ -301,13 +302,26 @@ class Benchmark:
                     "pesq": pesq_val
                     }
 
+                # Add confidence for AudioSeal and AwareEngine models
+                if confidence is not None:
+                    results[filepath][attack_name]["confidence"] = confidence
+
                 if attack_name == "CrossModelAttack":
                     results[filepath][attack_name]["accuracy_cross_model"] = different_accuracy
 
         return results
 
     def compute_mean_accuracy(self, results):
+        """
+        Compute mean accuracy and FNR/FPR for each attack.
 
+        Args:
+            results: Dictionary of results from run()
+            confidence_threshold: Threshold for watermark detection (default 0.5)
+
+        Returns:
+            Dictionary with mean accuracies and FNR/FPR rates
+        """
         attack_accuracies = {}
 
         for _, attack_dict in results.items():
@@ -315,7 +329,8 @@ class Benchmark:
                 if attack_name not in attack_accuracies:
                     attack_accuracies[attack_name] = {
                         "accuracy": [],
-                        "accuracy_cross_model": []
+                        "accuracy_cross_model": [],
+                        "confidence": []
                     }
 
                 attack_accuracies[attack_name]["accuracy"].append(metrics["accuracy"])
@@ -324,6 +339,9 @@ class Benchmark:
                     attack_accuracies[attack_name]["accuracy_cross_model"].append(
                         metrics["accuracy_cross_model"]
                     )
+
+                if "confidence" in metrics:
+                    attack_accuracies[attack_name]["confidence"].append(metrics["confidence"])
 
         mean_accuracies = {}
 
