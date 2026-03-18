@@ -77,6 +77,27 @@ If using time stretch and pitch shift attacks on Windows, you'll need Rubberband
    - Add your rubberband directory path
    - Click OK to save
 
+### 6. Download Additional Datasets (For Specific Attacks)
+
+Some attacks require additional datasets to function:
+
+| Attack | Dataset Required | Description |
+|--------|------------------|-------------|
+| `ReplayAttack` | AIR (Acoustic Impulse Response) files | Room impulse responses for simulating acoustic replay |
+| `MixingAttack` | Music dataset | Background music for mixing with watermarked audio |
+
+**Download the datasets:**
+1. Download from [Google Drive](https://drive.google.com/drive/folders/17ZSP9gxumXs8V2K0ARBK5JQVtjxJbmyZ?usp=sharing)
+2. Extract and place in the project root:
+   ```
+   deepmarkpy-benchmark/
+   ├── AIR_wav_files/        # AIR files for ReplayAttack
+   ├── music/                # Music files for MixingAttack
+   └── ...
+   ```
+
+*Note: These attacks will fail if the required datasets are not present.*
+
 ## Running the Benchmark
 
 ### 1. Build and Start Services
@@ -87,6 +108,11 @@ docker build -f Dockerfile.base -t ml-services-base:latest .
 docker-compose -f docker-compose.yml build
 ```
 You can check the status of the services using `docker-compose ps`. The first build might take some time.
+
+> **Tip:** You don't need to run all services at once. If you only need specific attacks or models, you can build and run them individually:
+> ```bash
+> docker-compose up -d audioseal diffusion  # Only start AudioSeal model and Diffusion attack
+> ```
 
 ### 2. Run the CLI
 Ensure the Docker services are running (`docker-compose up -d`) if you are using containerized plugins. Then, execute the main benchmark script from your activated virtual environment (if used) or directly:
@@ -129,11 +155,21 @@ class NewAttack(BaseAttack):
         return -audio
 ```
 3.	Add config.json
-```json 
+```json
 {
     "attack_parameter": 0.5
 }
 ```
+
+> **Important:** Use unique parameter names in your config to avoid conflicts with other attacks. A good practice is to suffix parameters with your attack name:
+> ```json
+> {
+>     "snr_db_myattack": 20,
+>     "threshold_myattack": 0.5
+> }
+> ```
+> This prevents parameter overwrites when multiple attacks are used together.
+
 4.	Dockerizing (Optional)
 
     If your attack requires AI models:
