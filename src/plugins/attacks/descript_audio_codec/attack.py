@@ -40,12 +40,10 @@ class DescriptAudioCodecAttack(BaseAttack):
 
         # Load pre-trained DAC model, options: "16khz", "24khz", "44khz"
         logger.info(f"Downloading DAC model: {model_type} (this may take a few minutes on first run)...")
-        print(f"[DAC] Downloading {model_type} model weights... Please wait.")
 
         model_path = dac.utils.download(model_type=model_type)
 
         logger.info(f"Download complete. Loading model from {model_path}")
-        print(f"[DAC] Download complete. Loading model...")
 
         self.model = dac.DAC.load(model_path)
         self.model = self.model.to(self.device)
@@ -73,12 +71,6 @@ class DescriptAudioCodecAttack(BaseAttack):
             for bandwidth, n_codebook in zip(self.supported_bandwidths, self.supported_n_codebooks)
         }
 
-        logger.info(f"Loaded DAC model: {model_type}")
-        logger.info(f"Supported codebooks: {self.supported_n_codebooks}")
-        logger.info(f"Supported bandwidths (bps): {[int(b) for b in self.supported_bandwidths]}")
-        print(f"[DAC] Model loaded successfully!")
-        print(f"[DAC] Supported codebooks: {self.supported_n_codebooks}")
-
     def apply(self, audio: np.ndarray, **kwargs) -> np.ndarray:
         """
         Apply Descript Audio Codec (DAC) neural codec compression attack.
@@ -94,12 +86,8 @@ class DescriptAudioCodecAttack(BaseAttack):
         """
         sampling_rate = 16000
 
-        logger.info(f"DAC attack: Processing audio with shape {audio.shape}")
-
         # Load model on first use
         self._load_model()
-
-        logger.info("DAC model loaded successfully")
 
         # Get number of codebooks to use
         n_codebooks = kwargs.get("n_codebooks_dac", self.config.get("n_codebooks_dac"))
@@ -111,8 +99,6 @@ class DescriptAudioCodecAttack(BaseAttack):
             logger.warning(f"n_codebooks={n_codebooks} not in supported range {self.supported_n_codebooks}, using {self.n_codebooks}")
             n_codebooks = self.n_codebooks
 
-        logger.info(f"Using {n_codebooks} codebooks for compression")
-
         # Convert numpy to torch tensor [batch, channels, time]
         waveform = torch.tensor(audio, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
         waveform = waveform.to(self.device)
@@ -121,7 +107,6 @@ class DescriptAudioCodecAttack(BaseAttack):
         target_sr = self.config.get("target_sampling_rate_dac", 44100)
         if sampling_rate != target_sr:
             import torchaudio
-            logger.info(f"Resampling from {sampling_rate}Hz to {target_sr}Hz")
             resampler = torchaudio.transforms.Resample(
                 orig_freq=sampling_rate,
                 new_freq=target_sr
@@ -131,7 +116,6 @@ class DescriptAudioCodecAttack(BaseAttack):
         # Apply DAC compression and decompression
         try:
             with torch.no_grad():
-                logger.info("Compressing audio with DAC...")
                 original_length = waveform.shape[-1]
                 reconstructed = self.model(waveform, n_quantizers=n_codebooks)['audio']
                 reconstructed = reconstructed[..., :original_length]
@@ -141,7 +125,6 @@ class DescriptAudioCodecAttack(BaseAttack):
 
         # Resample back to original sampling rate if needed
         if sampling_rate != target_sr:
-            logger.info(f"Resampling back from {target_sr}Hz to {sampling_rate}Hz")
             resampler_back = torchaudio.transforms.Resample(
                 orig_freq=target_sr,
                 new_freq=sampling_rate
@@ -150,5 +133,4 @@ class DescriptAudioCodecAttack(BaseAttack):
 
         # Convert back to numpy
         result = reconstructed.squeeze().cpu().numpy()
-        logger.info(f"DAC attack complete. Output shape: {result.shape}")
         return result

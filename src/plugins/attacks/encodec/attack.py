@@ -1,10 +1,7 @@
-import logging
 import numpy as np
 import torch
 
 from core.base_attack import BaseAttack
-
-logger = logging.getLogger(__name__)
 
 
 class EncodecAttack(BaseAttack):
@@ -33,8 +30,6 @@ class EncodecAttack(BaseAttack):
         self.model.set_target_bandwidth(bandwidth)
         self.model = self.model.to(self.device)
         self.model.eval()
-
-        logger.info(f"Loaded Encodec model: {model_name} with bandwidth {bandwidth} kbps")
 
     def apply(self, audio: np.ndarray, **kwargs) -> np.ndarray:
         """
