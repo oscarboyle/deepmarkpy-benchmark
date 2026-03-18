@@ -11,9 +11,6 @@ from core.base_attack import BaseAttack
 from plugins.attacks.equalizer.attack import EqualizerAttack
 from plugins.attacks.highpass_filter.attack import HighpassFilterAttack
 
-import logging
-logger = logging.getLogger(__name__)
-
 
 class MixingAttack(BaseAttack):
 
@@ -135,8 +132,6 @@ class MixingAttack(BaseAttack):
         # Create binary voice activity mask
         voice_mask = (lufs > min_lufs).astype(float)
 
-        logger.info(f"LUFS range: {np.min(lufs):.1f} to {np.max(lufs):.1f} LUFS")
-
         return voice_mask, lufs_normalized
 
     def _smooth_envelope(self, envelope, sr, window_seconds=0.5):
@@ -182,8 +177,6 @@ class MixingAttack(BaseAttack):
         # Pick random music file
         music_file = random.choice(music_files)
         music_path = os.path.join(music_folder, music_file)
-
-        logger.info(f"Selected music: {music_file}")
 
         # Load music at target sample rate
         music, _ = librosa.load(music_path, sr=sr, mono=True)
@@ -274,9 +267,6 @@ class MixingAttack(BaseAttack):
         volume_high = audio_max * volume_high_ratio  # e.g., 50% of max audio when silent
         volume_low = audio_max * volume_low_ratio    # e.g., 10% of max audio during speech
 
-        logger.info(f"Audio max amplitude: {audio_max:.3f}")
-        logger.info(f"Music volume range: {volume_low:.3f} - {volume_high:.3f}")
-
         # Detect voice activity using LUFS (perceived loudness)
         voice_mask, lufs_envelope = self._detect_voice_activity_lufs(
             audio, sampling_rate, threshold=-40, window_seconds=0.4
@@ -286,11 +276,7 @@ class MixingAttack(BaseAttack):
         voice_envelope = self._smooth_envelope(lufs_envelope, sampling_rate, window_seconds=smoothing_window)
 
         # Create music volume envelope (inverse of voice activity)
-        # Where voice is present (high envelope), music should be low
-        # Where voice is absent (low envelope), music should be high
         music_gain = volume_high - (voice_envelope * (volume_high - volume_low))
-
-        logger.info(f"Voice activity: {np.mean(voice_mask)*100:.1f}% of audio")
 
         # Load random music
         music = self._load_random_music(music_folder, len(audio), sampling_rate)
