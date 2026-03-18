@@ -8,8 +8,6 @@ from scipy.signal import butter, sosfilt
 
 from core.base_attack import BaseAttack
 
-import logging
-logger = logging.getLogger(__name__)
 
 class ReplayAttack(BaseAttack):
 
@@ -46,7 +44,6 @@ class ReplayAttack(BaseAttack):
         temp_path = tempfile.mktemp(suffix='.wav')
         sf.write(temp_path, convolved, audio_sr)
         convolved, verified_sr = librosa.load(temp_path, sr=None)
-        logger.info(f"Convolved signal sample rate: {verified_sr} Hz")
         os.remove(temp_path)
 
         max_val = np.max(np.abs(convolved))
@@ -100,12 +97,10 @@ class ReplayAttack(BaseAttack):
         air_file = random.choice(air_files)
         air_path = os.path.join(air_folder, air_file)
 
-
         output = self._convolve_with_air(audio, sampling_rate, air_path, air_sr=air_sr)
         if bandpass:
             output = self._bandpass_filter(output, sampling_rate, low_freq, high_freq, order=filter_order)
         if add_noise:
             output = self._add_gaussian_noise(output, snr_db=snr_db)
-
 
         return output

@@ -360,11 +360,3 @@ async def attack(request: AttackRequest):
 async def health():
     """Health check endpoint."""
     return {"status": "healthy", "service": "opus_network"}
-
-
-if __name__ == "__main__":
-    app_port = int(os.getenv("OPUS_NETWORK_PORT", 10020))
-    host = os.environ.get("HOST", "0.0.0.0")
-
-    logger.info(f"Starting Opus Network Emulation server on port {app_port}")
-    uvicorn.run(app, host=host, port=app_port)
