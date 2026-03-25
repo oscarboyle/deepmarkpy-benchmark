@@ -7,19 +7,19 @@ class PinkNoiseAttack(BaseAttack):
 
     def apply(self, audio: np.ndarray, **kwargs) -> np.ndarray:
         """
-        Perform a pink noise (Voss-McCartney) attack on an audio signal. 
+        Perform a pink noise attack on an audio signal using SNR control.
         Args:
             audio (np.ndarray): The input audio signal.
             **kwargs: Additional parameters for the pink noise attack:
-                - amplitude (float): Controls how loud the sound is.
+                - snr_db_pn (float): Desired Signal-to-Noise Ratio in dB
         Returns:
             np.ndarray: The processed audio signal with the pink noise applied.
-
         """
 
-        amplitude = kwargs.get(
-            "amplitude", self.config.get("amplitude")
+        snr_db = kwargs.get(
+            "snr_db_pn", self.config.get("snr_db_pn")
         )
+
         n_samples = len(audio)
         white = np.random.normal(0, 1, n_samples)
 
@@ -28,11 +28,16 @@ class PinkNoiseAttack(BaseAttack):
         a = [1, -2.494956002, 2.017265875, -0.522189400]
         pink = lfilter(b, a, white)
 
-        pink = pink / np.max(np.abs(pink)) * amplitude
+        # Scale pink noise based on SNR
+        signal_power = np.mean(audio ** 2)
+        snr_linear = 10 ** (snr_db / 10.0)
+        noise_power = signal_power / snr_linear
+
+        # Normalize pink noise to have the desired power
+        pink_power = np.mean(pink ** 2)
+        pink = pink * np.sqrt(noise_power / pink_power)
         pink = pink.astype(np.float32)
 
-        noisy_audio=audio+pink
-       
+        noisy_audio = audio + pink
+
         return noisy_audio
-
-

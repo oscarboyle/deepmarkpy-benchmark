@@ -74,15 +74,26 @@ async def detect(request: DetectRequest):
     if sampling_rate != config["sampling_rate"]:
         audio = resample_audio(request.audio, sampling_rate, config["sampling_rate"])
 
+    # AudioSeal requires minimum audio length for the neural network
+    # Kernel size is 7, but due to architecture we need more samples
+    min_samples = 1000  # Safe minimum for AudioSeal
+    if len(audio) < min_samples:
+        logger.warning(f"Audio too short for detection ({len(audio)} samples), returning empty result")
+        return {"watermark": [], "confidence": 0.0}
+
     detector = model["detector"]
     watermarked_audio = np.expand_dims(audio, axis=[0, 1])
     watermarked_audio = torch.tensor(watermarked_audio, dtype=torch.float32)
 
-    _, message = detector.detect_watermark(watermarked_audio, sampling_rate)
-    
+    try:
+        confidence, message = detector.detect_watermark(watermarked_audio, sampling_rate)
+    except RuntimeError as e:
+        logger.error(f"Detection failed: {e}")
+        return {"watermark": [], "confidence": 0.0}
 
     message = message.squeeze().cpu().numpy()
-    return {"watermark": message if message is None else message.tolist()}
+    return {"watermark": message if message is None else message.tolist(),
+            "confidence": float(confidence)}
 
 if __name__ == "__main__":
     # Use the default as a fallback if AUDIOSEAL_PORT is not set in the environment

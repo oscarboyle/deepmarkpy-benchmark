@@ -67,5 +67,8 @@ typing-inspection==0.4.1
 typing_extensions==4.14.0
 urllib3==2.5.0
 uvicorn==0.35.0
-pystoi
-pesq
+pystoi==0.4.1
+pesq==0.0.4
+encodec==0.1.1
+descript-audio-codec==1.0.0
+audiocomplib==0.2.0

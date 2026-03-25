@@ -22,7 +22,7 @@ class SpeechBrain:
     def inference(self, audio, sampling_rate, noise_strength):
         assert abs(noise_strength) <= 0.01, "noise_strength should not be greater than 0.01."
         audio = resample_audio(audio, input_sr=sampling_rate, target_sr=16000)
-        noisy = audio+noise_strength*np.random.normal(0, 1, size=(len(audio)))
+        noisy = audio +noise_strength*np.random.normal(0, 1, size=(len(audio)))
         noisy = np.expand_dims(noisy, axis=[0])
         noisy = torch.FloatTensor(noisy)
         lengths = torch.FloatTensor([1.0])

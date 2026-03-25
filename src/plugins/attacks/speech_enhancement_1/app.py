@@ -22,7 +22,7 @@ except (FileNotFoundError, ValueError, IOError) as e:
     logger.critical(f"Failed to load configuration: {e}. Application cannot start.")
     sys.exit(1)
 
-model = SpeechBrain(config["type"])
+model = SpeechBrain(config["type_se1"])
 
 
 class AttackRequest(BaseModel):
@@ -40,12 +40,3 @@ async def attack(request: AttackRequest):
     audio = model.inference(audio, sampling_rate, noise_strength)
 
     return {"audio": audio.tolist()}
-
-
-if __name__ == "__main__":
-    # Use the default as a fallback if SPEECH_ENHANCEMENT_PORT is not set in the environment
-    app_port = int(os.getenv("SPEECH_ENHANCEMENT_PORT", 10005))
-    host = os.environ.get("HOST", "0.0.0.0")
-
-    logger.info(f"Starting server on port {app_port}")
-    uvicorn.run(app, host={host}, port={app_port})
