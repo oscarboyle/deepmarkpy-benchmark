@@ -15,7 +15,7 @@ class CropBeginningAttack(BaseAttack):
                 - crop_percentage_beginning (float): Total percentage to crop. Default is 10.
 
         Returns:
-            np.ndarray: Audio signal with portions cropped from both ends.
+            np.ndarray: Audio signal with portions cropped from beginning.
 
         Raises:
             ValueError: If 'sampling_rate' is not provided in kwargs.

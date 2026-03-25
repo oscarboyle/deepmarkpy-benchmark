@@ -208,7 +208,6 @@ class MixingAttack(BaseAttack):
                 - music_folder_mixing (str): Folder containing music files
                 - music_volume_high_mixing (float): Max music volume as fraction of audio max (0-1)
                 - music_volume_low_mixing (float): Music volume during speech as fraction of audio max (0-1)
-                - vad_threshold_mixing (float): Voice activity detection threshold
                 - smoothing_window_mixing (float): Smoothing window in seconds
 
         Returns:
