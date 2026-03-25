@@ -1,0 +1,59 @@
+# DeepMarkPy Benchmark — Development Guide
+
+## What This Project Is
+
+Open-source benchmarking framework for evaluating audio watermarking robustness. Evaluates watermarking models against 40+ attacks (signal processing, AI-based, transmission). Published at the GenAI Watermarking Workshop 2025.
+
+## Architecture
+
+- **Plugin-based**: Models and attacks auto-discovered from `src/plugins/models/` and `src/plugins/attacks/` via `PluginManager`
+- **Client-server**: Complex ML models/attacks run in Docker containers, accessed via HTTP (FastAPI). Simple attacks run natively
+- **Base classes**: `BaseModel` (embed/detect) in `src/core/base_model.py`, `BaseAttack` (apply) in `src/core/base_attack.py`
+- **Config-driven**: Each plugin has a `config.json` with defaults. Model configs include `returns_confidence` and `is_zero_bit` flags for dispatch
+
+## Key Files
+
+- `src/run.py` — CLI entrypoint
+- `src/benchmark.py` — Core benchmark orchestration (run loop, accuracy computation)
+- `src/plugin_manager.py` — Auto-discovers plugins by walking directories
+- `src/utils/metrics.py` — PESQ, STOI, PSNR, SI-SDR
+- `src/utils/report_generator.py` — LaTeX + chart generation
+- `docker-compose.yml` — All containerized services
+- `.env.example` — Port configuration template
+
+## Running Tests
+
+```bash
+python -m pytest tests/ -v
+```
+
+Tests are in `tests/` and use `conftest.py` for shared fixtures (sample audio, watermarks, result dicts). Tests add `src/` to `sys.path` via conftest.
+
+Current: 74 tests, ~2s runtime. No Docker required for tests.
+
+## Running the Benchmark
+
+```bash
+# Start Docker services (if using containerized models/attacks)
+docker-compose up -d audioseal
+# Run benchmark
+python src/run.py --wav_files_dir /path/to/wavs --wm_model AudioSealModel --attack_types GaussianNoiseAttack
+```
+
+## Development Conventions
+
+- **Attack parameter names must be unique across all attacks** — they share a flat CLI namespace. Suffix with attack name (e.g., `snr_db_replay`, `order_bandstop`). The system warns on collisions but doesn't prevent them
+- **Model capabilities declared in config.json** — use `returns_confidence: true/false` and `is_zero_bit: true/false` instead of hardcoding model names in benchmark.py
+- **Native attacks** need only `attack.py` + `config.json` in their directory
+- **Dockerized attacks/models** additionally need `app.py`, `Dockerfile`, `requirements.txt`
+- **Use `logger` not `print()`** for all output. Use `logging.getLogger(__name__)` (never overwrite the `logging` module)
+- **uvicorn startup**: In `app.py` files, use `uvicorn.run(app, host=host, port=app_port)` — never `{host}` (creates a set)
+
+## Common Gotchas
+
+- Plugin loading imports ALL plugins at startup. If a dependency is missing (e.g., `pywt`, `audiocomplib`), that plugin silently fails to load
+- The `.env` file is gitignored; copy `.env.example` to `.env` for local development
+- Accuracy values are percentages (0-100), NOT decimals (0-1). All thresholds and comparisons must use percentage scale
+- `CrossModelAttack.apply()` returns a tuple `(audio, watermark)`, not just audio — handled specially in benchmark.py
+- Perth is a zero-bit model (detect returns a scalar, not a bit array)
+- AudioSeal and AWARE return `(watermark, confidence)` from detect; others return just the watermark
