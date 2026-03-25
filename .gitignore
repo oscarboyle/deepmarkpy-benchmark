@@ -14,6 +14,9 @@ benchmark*.json
 
 *.DS_Store
 
+# Environment variables
+.env
+
 *.ts
 
 # IDE
