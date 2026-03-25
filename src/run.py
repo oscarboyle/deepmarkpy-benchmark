@@ -14,15 +14,24 @@ logger = logging.getLogger(__name__)
 
 
 import numpy as np
-def convert_numpy(obj):
-    if isinstance(obj, np.integer):
-        return int(obj)
-    elif isinstance(obj, np.floating):
-        return float(obj)
-    elif isinstance(obj, np.ndarray):
+
+
+def to_json_safe(obj):
+    """
+    Recursively convert numpy types to native Python types
+    so json.dump does not crash.
+    """
+    if isinstance(obj, np.ndarray):
         return obj.tolist()
-    else:
-        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+    if isinstance(obj, (np.float32, np.float64)):
+        return float(obj)
+    if isinstance(obj, (np.int32, np.int64)):
+        return int(obj)
+    if isinstance(obj, dict):
+        return {k: to_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [to_json_safe(v) for v in obj]
+    return obj
     
 def main():
     benchmark = Benchmark()
@@ -108,12 +117,14 @@ def main():
     results = benchmark.run(filepaths=filepaths, **args_dict)
 
     with open("benchmark_results.json", "w") as fp:
-        json.dump(results, fp, indent=4, default=convert_numpy)
+        json.dump(to_json_safe(results), fp, indent=4)
 
     logger.info("Benchmark completed. Results saved to benchmark_results.json")
 
+    stats = benchmark.compute_mean_accuracy(results)
+    flattened_stats = {attack: metrics["accuracy_mean"] for attack, metrics in stats.items()}
     with open("benchmark_stats.json", "w") as fp:
-        json.dump(benchmark.compute_mean_accuracy(results), fp, indent=4)
+        json.dump(to_json_safe(flattened_stats), fp, indent=4)
 
     logger.info("Benchmark statistics saved to benchmark_stats.json")
 
