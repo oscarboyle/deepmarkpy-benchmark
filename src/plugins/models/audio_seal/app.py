@@ -2,7 +2,6 @@ import logging
 import os
 import sys
 from typing import List
-import sys
 
 import numpy as np
 import torch
@@ -101,4 +100,4 @@ if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
 
     logger.info(f"Starting server on port {app_port}")
-    uvicorn.run(app, host={host}, port={app_port})
+    uvicorn.run(app, host=host, port=app_port)

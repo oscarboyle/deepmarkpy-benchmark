@@ -26,5 +26,5 @@ WORKDIR /app
 # Copy shared utilities (this appears in all your dockerfiles)
 COPY src/utils ./utils
 
-# Set up Python path ###### re-check this line
+# Set up Python path
 ENV PYTHONPATH=/app:$PYTHONPATH
