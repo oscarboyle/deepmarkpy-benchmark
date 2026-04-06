@@ -87,9 +87,9 @@ def snr(signal, noisy_signal):
     if noise_power == 0:
         return np.inf
 
-    snr = 10 * np.log10(signal_power / noise_power)
+    snr_value = 10 * np.log10(signal_power / noise_power)
 
-    return snr
+    return snr_value
 
 def resample_audio(audio, input_sr, target_sr):
     """

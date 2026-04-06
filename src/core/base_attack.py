@@ -30,7 +30,7 @@ class BaseAttack(abc.ABC):
         self.config_path = os.path.join(model_dir, "config.json")
 
         if not os.path.exists(self.config_path):
-            logging.warning(f"config.json not found in {self.config_path}")
+            logger.warning(f"config.json not found in {self.config_path}")
             self._config = None
         else:
             with open(self.config_path, "r") as json_file:

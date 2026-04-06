@@ -75,7 +75,5 @@ class CutSamplesAttack(BaseAttack):
 
         modified_audio.extend(segment_audio[prev_cut_end:])
 
-        print(len(modified_audio))
-
         final_audio = np.concatenate([audio[:start_offset], modified_audio, audio[end_offset:]])
         return final_audio

@@ -16,11 +16,11 @@ class SpeechEnhancement1Attack(BaseAttack):
         # Read the specific port variable for this attack service
         port = os.getenv("SPEECH_ENHANCEMENT_PORT1", "10005") # Default specific to VAE
         if not port:
-             logging.error("SPEECH_ENHANCEMENT_PORT1 environment variable not set.")
+             logger.error("SPEECH_ENHANCEMENT_PORT1 environment variable not set.")
              raise ValueError("SPEECH_ENHANCEMENT_PORT1 must be set for SpeechEnhancement1Attack")
 
         self.endpoint = f"http://{host}:{port}"
-        logging.info(f"SpeechEnhancement1Attack initialized. Target API: {self.endpoint}")
+        logger.info(f"SpeechEnhancement1Attack initialized. Target API: {self.endpoint}")
 
     def apply(self, audio: np.ndarray, **kwargs) -> np.ndarray:
         sampling_rate = kwargs.get("sampling_rate_se1", None)

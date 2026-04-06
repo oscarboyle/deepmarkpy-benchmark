@@ -290,7 +290,7 @@ def process_with_opus_and_network(
             decoded_audio = np.pad(decoded_audio, (0, len(audio) - len(decoded_audio)))
 
         logger.info(f"Opus network attack complete: bitrate={bitrate}k, delay={delay_ms}ms, "
-                   f"jitter={jitter_ms}ms, loss={packet_loss}, attacked audio sampling rate={sr}% ")
+                   f"jitter={jitter_ms}ms, loss={packet_loss}, attacked audio sampling rate={sr}Hz ")
 
         return decoded_audio.astype(np.float32)
 

@@ -113,12 +113,12 @@ class Benchmark:
 
         Args:
             filepaths (str or list): Path(s) to the audio file(s) to benchmark.
-            model_name (str): The model to benchmark (e.g., 'AudioSeal', 'WavMark', 'SilentCipher').
+            wm_model (str): The model to benchmark (e.g., 'AudioSeal', 'WavMark', 'SilentCipher').
             watermark_data (np.ndarray, optional): The binary watermark data to embed. Defaults to random message.
             attack_types (list, optional): A list of attack types to perform. Defaults to all available attacks.
             sampling_rate (int, optional): Target sampling rate for loading audio. Defaults to None.
-            verbose (bool, optional): Print verbose info. Defaults to True.
-            save_audio (bool, optional): Whether to save processed audio files. Defaults to True.
+            verbose (bool, optional): Print verbose info. Defaults to False.
+            save_audio (bool, optional): Whether to save processed audio files. Defaults to False.
             output_dir (str, optional): Directory to save processed audio. Defaults to "audio_processed".
             **kwargs: Additional parameters for specific attacks.
 

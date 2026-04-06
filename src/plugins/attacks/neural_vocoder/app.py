@@ -44,8 +44,8 @@ async def attack(request: AttackRequest):
 
 
 if __name__ == "__main__":
-    # Use the default as a fallback if NEURAL_VOCODER_PORT is not set in the environment
-    app_port = int(os.getenv("NEURAL_VOCODER_PORT", 10004))
+    # Use the default as a fallback if APP_PORT is not set in the environment
+    app_port = int(os.getenv("APP_PORT", 10004))
     host = os.environ.get("HOST", "0.0.0.0")
 
     logger.info(f"Starting server on port {app_port}")
