@@ -67,7 +67,7 @@ def main():
     # Add verbose flag
     parser.add_argument(
         "--verbose",
-        type=bool,
+        action="store_true",
         default=False,
         help="Enable verbose logging",
     )

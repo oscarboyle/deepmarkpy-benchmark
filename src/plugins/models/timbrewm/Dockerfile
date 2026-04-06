@@ -25,10 +25,8 @@ RUN sed -i 's|./hifigan/model/VCTK_V1/generator_v1|TimbreWatermarking/watermarki
 
 FROM ml-services-base:latest
 
-# Set ARG for build-time use defaults
-ARG APP_PORT=9001
-ENV APP_PORT=${TIMBREWM_PORT}
-
+# Default port; overridden at runtime by docker-compose (APP_PORT from .env)
+ENV APP_PORT=9001
 ARG HOST="0.0.0.0"
 ENV HOST=${HOST}
 

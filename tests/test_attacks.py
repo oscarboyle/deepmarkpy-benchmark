@@ -149,7 +149,7 @@ class TestQuantizationAttack:
     def test_output_shape(self, attacks, sample_audio):
         atk = _make_attack(attacks, "QuantizationAttack")
         audio, sr = sample_audio
-        result = atk.apply(audio, sampling_rate=sr, num_levels=256)
+        result = atk.apply(audio, sampling_rate=sr, quantization_bit=256)
         assert result.shape == audio.shape
 
     def test_fewer_levels_more_distortion(self, attacks):
@@ -157,8 +157,8 @@ class TestQuantizationAttack:
         np.random.seed(42)
         audio = np.random.randn(16000).astype(np.float32)
         atk = _make_attack(attacks, "QuantizationAttack")
-        q_fine = atk.apply(audio, sampling_rate=16000, num_levels=1024)
-        q_coarse = atk.apply(audio, sampling_rate=16000, num_levels=4)
+        q_fine = atk.apply(audio, sampling_rate=16000, quantization_bit=1024)
+        q_coarse = atk.apply(audio, sampling_rate=16000, quantization_bit=4)
         err_fine = np.mean((audio - q_fine) ** 2)
         err_coarse = np.mean((audio - q_coarse) ** 2)
         assert err_coarse > err_fine
