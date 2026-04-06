@@ -76,8 +76,8 @@ async def detect(request: DetectRequest):
     return {"watermark": message}
 
 if __name__ == "__main__":
-    # Use the default as a fallback if SILENTCIPHER_PORT is not set in the environment
-    app_port = int(os.getenv("SILENTCIPHER_PORT", 7001))
+    # Use the default as a fallback if APP_PORT is not set in the environment
+    app_port = int(os.getenv("APP_PORT", 7001))
     host = os.environ.get("HOST", "0.0.0.0")
 
     logger.info(f"Starting server on port {app_port}")

@@ -162,8 +162,8 @@ async def detect(request: DetectRequest):
         raise
 
 if __name__ == "__main__":
-    # Use the default as a fallback if TIMBREWM_PORT is not set in the environment
-    app_port = int(os.getenv("TIMBREWM_PORT", 9001))
+    # Use the default as a fallback if APP_PORT is not set in the environment
+    app_port = int(os.getenv("APP_PORT", 9001))
     host = os.environ.get("HOST", "0.0.0.0")
 
     logger.info(f"Starting server on port {app_port}")

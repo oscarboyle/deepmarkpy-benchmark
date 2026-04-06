@@ -1,9 +1,7 @@
 FROM ml-services-base:latest
 
-# Set ARG for build-time use defaults
-ARG APP_PORT=5001
-ENV APP_PORT=${AUDIOSEAL_PORT}
-
+# Default port; overridden at runtime by docker-compose (APP_PORT from .env)
+ENV APP_PORT=5001
 ARG HOST="0.0.0.0"
 ENV HOST=${HOST}
 

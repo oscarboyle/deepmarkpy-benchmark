@@ -43,11 +43,11 @@ class NetworkTransmissionAttack(BaseAttack):
         host = "localhost"
         port = os.getenv("NETWORK_TRANSMISSION_PORT", "10020")
         if not port:
-            logging.error("NETWORK_TRANSMISSION_PORT environment variable not set.")
+            logger.error("NETWORK_TRANSMISSION_PORT environment variable not set.")
             raise ValueError("NETWORK_TRANSMISSION_PORT must be set for NetworkTransmissionAttack")
 
         self.endpoint = f"http://{host}:{port}"
-        logging.info(f"OpusNetworkAttack initialized. Target API: {self.endpoint}")
+        logger.info(f"OpusNetworkAttack initialized. Target API: {self.endpoint}")
 
     def apply(self, audio: np.ndarray, **kwargs) -> np.ndarray:
         """

@@ -1,6 +1,5 @@
 import json
 import os
-import subprocess
 import logging
 from typing import Dict
 import matplotlib.pyplot as plt

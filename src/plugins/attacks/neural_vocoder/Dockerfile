@@ -1,9 +1,7 @@
 FROM ml-services-base:latest AS builder
 
-# Set ARG for build-time use defaults
-ARG APP_PORT=10004
-ENV APP_PORT=${NEURAL_VOCODER_PORT}
-
+# Default port; overridden at runtime by docker-compose (APP_PORT from .env)
+ENV APP_PORT=10004
 ARG HOST="0.0.0.0"
 ENV HOST=${HOST}
 

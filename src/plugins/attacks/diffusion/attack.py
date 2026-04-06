@@ -16,11 +16,11 @@ class DiffusionAttack(BaseAttack):
         # Read the specific port variable for this attack service
         port = os.getenv("DIFFUSION_PORT", "10002") # Default specific to Diffusion
         if not port:
-             logging.error("DIFFUSION_PORT environment variable not set.")
+             logger.error("DIFFUSION_PORT environment variable not set.")
              raise ValueError("DIFFUSION_PORT must be set for DiffusionAttack")
 
         self.endpoint = f"http://{host}:{port}"
-        logging.info(f"DiffusionAttack initialized. Target API: {self.endpoint}")
+        logger.info(f"DiffusionAttack initialized. Target API: {self.endpoint}")
 
     def apply(self, audio, **kwargs):
         """Applies the Diffusion attack using the backend service."""

@@ -15,7 +15,7 @@ class BandstopFilterAttack(BaseAttack):
                 - order (int): The order of the Butterworth filter. Higher order means a steeper
                 roll-off but can introduce more phase distortion.
         Returns:
-            np.ndarray: The processed audio signal with the high-pass filtering applied.
+            np.ndarray: The processed audio signal with the band-stop filtering applied.
 
         Raises:
             ValueError: If the `sampling_rate` is not provided in `kwargs`.

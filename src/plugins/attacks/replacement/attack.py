@@ -20,7 +20,6 @@ class ReplacementAttack(BaseAttack):
                 indicate higher overlap.
                 - replacement_lower_bound (float): The lower bound of the similarity distance for considering a block as a candidate (default: 0).
                 - replacement_upper_bound (float): The upper bound of the similarity distance for considering a block as a candidate (default: 10).
-                - replacement_k (int): Maximum number of similar blocks to consider (default: 20).
                 - replacement_use_masking (bool): Whether to use psychoacoustic masking for distance calculation (default: False).
 
         Returns:

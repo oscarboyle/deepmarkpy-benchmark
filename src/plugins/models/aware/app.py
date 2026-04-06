@@ -119,7 +119,7 @@ async def detect(request: DetectRequest):
 
 
 if __name__ == "__main__":
-    # Use the default as a fallback if AWARE_PORT is not set in the environment
+    # Use the default as a fallback if APP_PORT is not set in the environment
     app_port = int(os.getenv("APP_PORT", 9004))
     host = os.environ.get("HOST", "0.0.0.0")
 
