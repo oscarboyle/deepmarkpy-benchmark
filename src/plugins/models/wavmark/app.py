@@ -63,9 +63,9 @@ async def detect(request: DetectRequest):
     return {"watermark": message if message is None else message.tolist()}
 
 if __name__ == "__main__":
-    # Use the default as a fallback if WAVMARK_PORT is not set in the environment
-    app_port = int(os.getenv("WAVMARK_PORT", 7001))
+    # Use the default as a fallback if APP_PORT is not set in the environment
+    app_port = int(os.getenv("APP_PORT", 8001))
     host = os.environ.get("HOST", "0.0.0.0")
 
     logger.info(f"Starting server on port {app_port}")
-    uvicorn.run(app, host={host}, port={app_port})
+    uvicorn.run(app, host=host, port=app_port)

@@ -16,11 +16,11 @@ class VAEAttack(BaseAttack):
         # Read the specific port variable for this attack service
         port = os.getenv("VAE_PORT", "10001") # Default specific to VAE
         if not port:
-             logging.error("VAE_PORT environment variable not set.")
+             logger.error("VAE_PORT environment variable not set.")
              raise ValueError("VAE_PORT must be set for VAEAttack")
 
         self.endpoint = f"http://{host}:{port}"
-        logging.info(f"VAEAttack initialized. Target API: {self.endpoint}")
+        logger.info(f"VAEAttack initialized. Target API: {self.endpoint}")
 
     def apply(self, audio: np.ndarray, **kwargs) -> np.ndarray:
         """Applies the VAE attack using the backend service."""

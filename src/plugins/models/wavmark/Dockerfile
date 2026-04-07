@@ -2,10 +2,8 @@ FROM ml-services-base:latest
 
 WORKDIR /app
 
-# Set ARG for build-time use defaults
-ARG APP_PORT=8001
-ENV APP_PORT=${WAVMARK_PORT}
-
+# Default port; overridden at runtime by docker-compose (APP_PORT from .env)
+ENV APP_PORT=8001
 ARG HOST="0.0.0.0"
 ENV HOST=${HOST}
 

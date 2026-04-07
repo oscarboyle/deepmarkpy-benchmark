@@ -1,7 +1,7 @@
 FROM python:3.10-slim
 
-# Default port (can be overridden at runtime with -e NETWORK_TRANSMISSION_PORT=xxx)
-ENV NETWORK_TRANSMISSION_PORT=10020
+# Default port; overridden at runtime by docker-compose (APP_PORT from .env)
+ENV APP_PORT=10020
 ENV HOST="0.0.0.0"
 
 # Install system dependencies
@@ -46,4 +46,4 @@ EXPOSE 10020
 
 # Run the FastAPI server using Uvicorn
 # Note: Container must be run with --cap-add=NET_ADMIN for tc to work
-CMD uvicorn app:app --host=$HOST --port=$NETWORK_TRANSMISSION_PORT
+CMD uvicorn app:app --host=$HOST --port=$APP_PORT

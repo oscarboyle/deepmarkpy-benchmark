@@ -30,9 +30,9 @@ class CropBeginningAttack(BaseAttack):
 
         total_samples = len(audio)
 
-        samples_to_crop_per_side = int(total_samples * (crop_percentage / 100.0))
+        samples_to_crop = int(total_samples * (crop_percentage / 100.0))
 
-        start_index = samples_to_crop_per_side
+        start_index = samples_to_crop
         cropped_audio = audio[start_index:]
 
         return cropped_audio

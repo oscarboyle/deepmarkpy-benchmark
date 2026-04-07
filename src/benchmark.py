@@ -30,13 +30,18 @@ class Benchmark:
 
     def get_available_args(self):
         valid_args = {}
-        attacks = []
         models = self.models.keys()
         attacks = self.attacks.keys()
         for attack in attacks:
             config = self.attacks[attack]["config"]
             if config is not None:
                 for key, value in config.items():
+                    if key in valid_args and valid_args[key] != value:
+                        logger.warning(
+                            f"Config parameter '{key}' defined by multiple attacks with "
+                            f"different defaults. Last value wins. Consider using unique "
+                            f"parameter names (e.g., '{key}_{attack.lower()}')."
+                        )
                     valid_args[key] = value
         return list(models), list(attacks), valid_args
 
@@ -108,12 +113,12 @@ class Benchmark:
 
         Args:
             filepaths (str or list): Path(s) to the audio file(s) to benchmark.
-            model_name (str): The model to benchmark (e.g., 'AudioSeal', 'WavMark', 'SilentCipher').
+            wm_model (str): The model to benchmark (e.g., 'AudioSeal', 'WavMark', 'SilentCipher').
             watermark_data (np.ndarray, optional): The binary watermark data to embed. Defaults to random message.
             attack_types (list, optional): A list of attack types to perform. Defaults to all available attacks.
             sampling_rate (int, optional): Target sampling rate for loading audio. Defaults to None.
-            verbose (bool, optional): Print verbose info. Defaults to True.
-            save_audio (bool, optional): Whether to save processed audio files. Defaults to True.
+            verbose (bool, optional): Print verbose info. Defaults to False.
+            save_audio (bool, optional): Whether to save processed audio files. Defaults to False.
             output_dir (str, optional): Directory to save processed audio. Defaults to "audio_processed".
             **kwargs: Additional parameters for specific attacks.
 
@@ -139,6 +144,9 @@ class Benchmark:
 
         model_cls = self.models[wm_model]["class"]
         model_instance = model_cls()
+        model_config = self.models[wm_model]["config"] or {}
+        returns_confidence = model_config.get("returns_confidence", False)
+        is_zero_bit = model_config.get("is_zero_bit", False)
 
         if sampling_rate is None:
             sampling_rate = self.models[wm_model]["config"]["sampling_rate"]
@@ -160,10 +168,9 @@ class Benchmark:
             # Get base filename without extension
             base_filename = os.path.splitext(os.path.basename(filepath))[0]
 
-            # If no user-supplied watermark, pick a random message size
-            if watermark_data is None:
-                watermark_data = model_instance.generate_watermark()
-            attack_kwargs["watermark_data"] = watermark_data
+            # Generate a fresh watermark for each file if none was supplied by the user
+            file_watermark = watermark_data if watermark_data is not None else model_instance.generate_watermark()
+            attack_kwargs["watermark_data"] = file_watermark
 
             # Load audio
             audio, sampling_rate = load_audio(filepath, target_sr=sampling_rate)
@@ -172,7 +179,7 @@ class Benchmark:
 
             # Embed watermark
             watermarked_audio = model_instance.embed(
-                audio=audio, watermark_data=watermark_data, sampling_rate=sampling_rate
+                audio=audio, watermark_data=file_watermark, sampling_rate=sampling_rate
             ) 
 
             # Save watermarked audio
@@ -228,14 +235,14 @@ class Benchmark:
                             audio, **attack_kwargs
                         )
 
-                if (calculate_quality_metrics and attack_name =="SpeechEnhancement2Attack"):
-                   attacked_audio_metrics = np.squeeze(attacked_audio_metrics)
+                # Ensure consistent shape for all attacks
+                if isinstance(attacked_audio, np.ndarray):
+                    attacked_audio = np.squeeze(attacked_audio)
+                if calculate_quality_metrics and isinstance(attacked_audio_metrics, np.ndarray):
+                    attacked_audio_metrics = np.squeeze(attacked_audio_metrics)
+
                 # Save attacked audio
                 if save_audio:
-                    logger.info(attacked_audio.shape)
-                    logger.info(type(attacked_audio))
-                    if (attack_name =="SpeechEnhancement2Attack"):
-                        attacked_audio = np.squeeze(attacked_audio)  # (1, N) or (N, 1) -> (N,)
                     if attacked_audio.ndim == 1:
                         attacked_audio = np.expand_dims(attacked_audio, axis=1)
                     attacked_filename = f"{base_filename}_{attack_name}.wav"
@@ -244,35 +251,30 @@ class Benchmark:
                     if verbose:
                         logger.info(f"Saved attacked audio: {attacked_filename}")
                 
-                if isinstance(attacked_audio, np.ndarray):
-                    attacked_audio = attacked_audio.squeeze()   # (N,1) -> (N,)
-                    #attacked_audio = attacked_audio.tolist()
-
                 confidence = None
-                if wm_model == "AudioSealModel" or wm_model == "AwareModel":
+                if returns_confidence:
                     detected_message, confidence = model_instance.detect(attacked_audio, sampling_rate)
                 else:
                     detected_message = model_instance.detect(attacked_audio, sampling_rate)
 
                 if (attack_name =="CrossModelAttack"):
                     different_detected_message = different_model_instance.detect(attacked_audio, sampling_rate)
-                    if (different_model_name=="PerthModel"):
+                    diff_model_config = self.models.get(different_model_name, {}).get("config") or {}
+                    diff_is_zero_bit = diff_model_config.get("is_zero_bit", False)
+                    diff_returns_confidence = diff_model_config.get("returns_confidence", False)
+                    if diff_is_zero_bit:
                         if isinstance(different_detected_message, np.ndarray):
                             different_accuracy = different_detected_message.tolist()
                         else:
                             different_accuracy = different_detected_message
-                    elif (different_model_name=="AudioSealModel" or different_model_name=="AwareModel"):
-                        # AudioSealModel/AwareModel returns (watermark, confidence) tuple
+                    elif diff_returns_confidence:
                         different_watermark_detected, _ = different_detected_message
                         different_accuracy = self.compare_watermarks(different_watermark, different_watermark_detected)
                     else:
                         different_accuracy = self.compare_watermarks(different_watermark, different_detected_message)
                 
 
-                if abs(len(audio) - len(attacked_audio)) > 1:
-                    snr_val = "N/A"
-                else:
-                    snr_val = snr(audio, attacked_audio)
+                snr_val = snr(audio, attacked_audio)
                 
 
                 sr_scalar = int(sampling_rate) if isinstance(sampling_rate, (np.ndarray, list)) else sampling_rate
@@ -288,13 +290,13 @@ class Benchmark:
                     pesq_val = pesq_wrapper(ref, deg, metrics_sr, 'wb')
 
 
-                if (wm_model=="PerthModel"):
+                if is_zero_bit:
                     if isinstance(detected_message, np.ndarray):
                         accuracy = detected_message.tolist()
                     else:
-                       accuracy = detected_message
-                else:             
-                    accuracy = self.compare_watermarks(watermark_data, detected_message)
+                        accuracy = detected_message
+                else:
+                    accuracy = self.compare_watermarks(file_watermark, detected_message)
                     
                 results[filepath][attack_name] = {
                     "accuracy": accuracy,
@@ -302,7 +304,7 @@ class Benchmark:
                     "pesq": pesq_val
                     }
 
-                # Add confidence for AudioSeal and AwareEngine models
+                # Add confidence for models that return it
                 if confidence is not None:
                     results[filepath][attack_name]["confidence"] = confidence
 

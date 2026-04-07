@@ -1,6 +1,5 @@
 import json
 import os
-import subprocess
 import logging
 from typing import Dict
 import matplotlib.pyplot as plt
@@ -132,19 +131,20 @@ class BenchmarkReportGenerator:
         % Generated automatically from benchmark results
         % ======================================================================
 
-        \\documentclass[preprint,numbers]{{deepmark}}
+        \\documentclass{{article}}
+        \\usepackage{{booktabs}}
+        \\usepackage{{graphicx}}
+        \\usepackage{{cleveref}}
 
         % -------------------- Title & authors --------------------
-        \\title{{Benchmark Report}}
-
-        \\author[1]{{DeepMark Benchmark System}}
-        \\affil[1]{{DeepMark Inc., Delaware, USA}}
+        \\title{{Benchmark Report: {model_name}}}
+        \\author{{DeepMark Benchmark System}}
+        \\date{{\\today}}
 
         \\begin{{document}}
 
         % Title block
         \\maketitle
-        \\thispagestyle{{firststyle}}
 
         % -------------------- Abstract --------------------
         \\begin{{abstract}}
@@ -154,7 +154,7 @@ class BenchmarkReportGenerator:
         % -------------------- Results --------------------
         \\section{{Benchmark Results}}
 
-        \\Cref{{tab:benchmark_results}} reports per-attack watermark detection accuracy (attacks are listed alphabetically).
+        Table~\\ref{{tab:benchmark_results}} reports per-attack watermark detection accuracy (attacks are listed alphabetically).
 
         {table_code}
 
@@ -162,7 +162,7 @@ class BenchmarkReportGenerator:
         \\noindent\\textbf{{Overall Mean Accuracy:}} {mean_accuracy:.2f}\\%
 
         \\vspace{{1em}}
-        \\noindent\\Cref{{fig:benchmark_chart}} complements the table by visualizing the same results, enabling quicker inspection of relative differences and overall trends across attacks.
+        \\noindent Figure~\\ref{{fig:benchmark_chart}} complements the table by visualizing the same results, enabling quicker inspection of relative differences and overall trends across attacks.
 
         \\begin{{figure}}[h!]
         \\centering
@@ -179,10 +179,10 @@ class BenchmarkReportGenerator:
         \\begin{{itemize}}
         """
         
-        excellent = [name for name, acc in stats.items() if acc >= 0.95]
-        good = [name for name, acc in stats.items() if 0.85 <= acc < 0.95]
-        fair = [name for name, acc in stats.items() if 0.70 <= acc < 0.85]
-        poor = [name for name, acc in stats.items() if acc < 0.70]
+        excellent = [name for name, acc in stats.items() if acc >= 95]
+        good = [name for name, acc in stats.items() if 85 <= acc < 95]
+        fair = [name for name, acc in stats.items() if 70 <= acc < 85]
+        poor = [name for name, acc in stats.items() if acc < 70]
         
         if excellent:
             attack_word = "attack" if len(excellent) == 1 else "attacks"

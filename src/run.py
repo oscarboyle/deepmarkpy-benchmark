@@ -67,7 +67,7 @@ def main():
     # Add verbose flag
     parser.add_argument(
         "--verbose",
-        type=bool,
+        action="store_true",
         default=False,
         help="Enable verbose logging",
     )
@@ -75,10 +75,12 @@ def main():
     # Dynamically add configuration parameters from the available plugins
     for arg, default_value in valid_args.items():
         if isinstance(default_value, bool):
+            # Use BooleanOptionalAction to support both --flag and --no-flag
             parser.add_argument(
                 f"--{arg}",
-                action="store_true",
-                help=f"Enable {arg} (default: {default_value})",
+                action=argparse.BooleanOptionalAction,
+                default=default_value,
+                help=f"Enable/disable {arg} (default: {default_value})",
             )
         else:
             parser.add_argument(
@@ -91,7 +93,7 @@ def main():
     args = parser.parse_args()
 
     if args.verbose:
-        logger.getLogger().setLevel(logger.DEBUG)  # Set root logger level
+        logging.getLogger().setLevel(logging.DEBUG)
         logger.debug("Verbose logging enabled.")
 
     args_dict = vars(args)

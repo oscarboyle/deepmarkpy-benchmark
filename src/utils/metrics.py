@@ -1,6 +1,10 @@
+import logging
+
 import numpy as np
 from pystoi import stoi
 from pesq import pesq
+
+logger = logging.getLogger(__name__)
 
 
 def trim_audio_to_match(audio1: np.ndarray, audio2: np.ndarray) -> tuple:
@@ -21,11 +25,11 @@ def trim_audio_to_match(audio1: np.ndarray, audio2: np.ndarray) -> tuple:
     
     if len1 > len2:
         samples_trimmed = len1 - len2
-        print(f"Trimming audio1: {len1} → {len2} samples (removed {samples_trimmed} samples)")
+        logger.debug(f"Trimming audio1: {len1} → {len2} samples (removed {samples_trimmed} samples)")
         return audio1[:len2], audio2
     else:
         samples_trimmed = len2 - len1
-        print(f"Trimming audio2: {len2} → {len1} samples (removed {samples_trimmed} samples)")
+        logger.debug(f"Trimming audio2: {len2} → {len1} samples (removed {samples_trimmed} samples)")
         return audio1, audio2[:len1]
 
 
@@ -98,13 +102,13 @@ def stoi_wrapper(reference: np.ndarray, degraded: np.ndarray,
         # STOI requires minimum audio length
         min_samples = fs // 4
         if len(reference) < min_samples or len(degraded) < min_samples:
-            print(f"STOI: Audio too short ({len(reference)} samples), skipping")
+            logger.warning(f"STOI: Audio too short ({len(reference)} samples), skipping")
             return None
 
         try:
             return stoi(reference, degraded, fs)
         except Exception as e:
-            print(f"STOI calculation failed: {e}")
+            logger.warning(f"STOI calculation failed: {e}")
             return None
 
 
@@ -130,11 +134,11 @@ def pesq_wrapper(reference: np.ndarray, degraded: np.ndarray,
     # PESQ requires minimum audio length (roughly 0.25 seconds)
     min_samples = fs // 4
     if len(reference) < min_samples or len(degraded) < min_samples:
-        print(f"PESQ: Audio too short ({len(reference)} samples), skipping")
+        logger.warning(f"PESQ: Audio too short ({len(reference)} samples), skipping")
         return None
 
     try:
         return pesq(fs, reference, degraded, mode)
     except Exception as e:
-        print(f"PESQ calculation failed: {e}")
+        logger.warning(f"PESQ calculation failed: {e}")
         return None

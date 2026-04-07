@@ -3,5 +3,7 @@
     "type": "model",
     "variant": "docker",
     "sampling_rate": 16000,
-    "watermark_size": 16
+    "watermark_size": 16,
+    "returns_confidence": true,
+    "is_zero_bit": false
 }

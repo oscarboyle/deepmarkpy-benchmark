@@ -4,7 +4,7 @@ import numpy as np
 
 from core.base_model import BaseModel
 
-logging = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class PerthModel(BaseModel):
     def __init__(self):
@@ -13,11 +13,11 @@ class PerthModel(BaseModel):
         host = "localhost" 
         port = os.getenv("PERTH_PORT", "7010")
         if not port:
-             logging.error("PERTH_PORT environment variable not set.")
+             logger.error("PERTH_PORT environment variable not set.")
              raise ValueError("PERTH_PORT must be set for PerthModel")
 
         self.base_url = f"http://{host}:{port}"
-        logging.info(f"PerthModel initialized. Target API: {self.base_url}")
+        logger.info(f"PerthModel initialized. Target API: {self.base_url}")
 
     def embed(
         self, audio: np.ndarray, watermark_data: np.ndarray, sampling_rate: int
@@ -32,7 +32,7 @@ class PerthModel(BaseModel):
         response_data = self._make_request(endpoint="/embed", json_data=payload, method="POST")
 
         if "watermarked_audio" not in response_data:
-             logging.error("'/embed' response did not contain 'watermarked_audio' key.")
+             logger.error("'/embed' response did not contain 'watermarked_audio' key.")
              raise KeyError("Missing 'watermarked_audio' in response from /embed")
         return np.array(response_data["watermarked_audio"])
     
@@ -45,7 +45,7 @@ class PerthModel(BaseModel):
         response_data = self._make_request(endpoint="/detect", json_data=payload, method="POST")
 
         if "watermark" not in response_data:
-             logging.error("'/detect' response did not contain 'watermark' key.")
+             logger.error("'/detect' response did not contain 'watermark' key.")
              raise KeyError("Missing 'watermark' in response from /detect")
         # Handle potential None value from the API
         watermark = response_data["watermark"]
