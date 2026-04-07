@@ -47,7 +47,7 @@ async def embed(request: EmbedRequest):
 
     watermark_data = np.split(watermark_data, len(watermark_data) // 8)
     watermark_data = [int("".join(map(str, arr)), 2) for arr in watermark_data]
-    watermarked_audio, _ = model.encode_wav(audio, config["sampling_rate"], watermark_data)
+    watermarked_audio, _ = model.encode_wav(audio, config["sampling_rate"], watermark_data, calc_sdr=False)
 
     if sampling_rate != config["sampling_rate"]:
         watermarked_audio = resample_audio(watermarked_audio, config["sampling_rate"], sampling_rate)
