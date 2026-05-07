@@ -247,9 +247,9 @@ If you use DeepMark Benchmark in your research, please cite our paper:
   journal={IEEE Access}, 
   title={DeepMark Benchmark: Redefining Audio Watermarking Robustness}, 
   year={2026},
-  volume={},
+  volume={14},
   number={},
-  pages={1-1},
+  pages={62031-62044},
   keywords={Digital audio players;Digital audio broadcasting;Radio broadcasting;Frequency modulation;Filtering;Filters;Equalizers;Low-pass filters;Notch filters;Circuits and systems;Audio watermarking;benchmarking;deep learning;generative AI;robustness evaluation;watermark removal},
   doi={10.1109/ACCESS.2026.3685903}}
 ```
