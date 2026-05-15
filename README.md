@@ -1,4 +1,4 @@
-# DeepMarkPy Benchmark
+# DeepMark Benchmark
 
 DeepMark Benchmark is a modular and scalable Python platform for evaluating the robustness of audio watermarking systems. It enables testing against various attacks, including both simple signal manipulations and advanced AI-based disruptions, using a containerized architecture for consistency and ease of use.
 
@@ -25,7 +25,7 @@ This benchmark uses a client-server architecture. Core watermarking models and c
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/deepmarkpy/deepmarkpy-benchmark.git
+git clone https://github.com/deepmark/deepmarkpy-benchmark.git
 cd deepmarkpy-benchmark
 ```
 
