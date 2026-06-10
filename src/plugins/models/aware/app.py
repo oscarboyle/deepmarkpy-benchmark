@@ -20,6 +20,14 @@ app = FastAPI()
 try:
     logger.info("Loading AWARE models...")
     embedder, detector = load()
+
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"Using device for AWARE: {device}")
+
+    if isinstance(embedder, torch.nn.Module): embedder = embedder.to(device)
+    if isinstance(detector, torch.nn.Module): detector = detector.to(device)
+    
     model = {
         "embedder": embedder,
         "detector": detector,

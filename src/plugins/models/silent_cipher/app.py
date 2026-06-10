@@ -47,8 +47,9 @@ async def embed(request: EmbedRequest):
 
     watermark_data = np.split(watermark_data, len(watermark_data) // 8)
     watermark_data = [int("".join(map(str, arr)), 2) for arr in watermark_data]
-    watermarked_audio, _ = model.encode_wav(audio, config["sampling_rate"], watermark_data, calc_sdr=False)
-
+    with torch.no_grad():
+        watermarked_audio, _ = model.encode_wav(audio, config["sampling_rate"], watermark_data
+                                                
     if sampling_rate != config["sampling_rate"]:
         watermarked_audio = resample_audio(watermarked_audio, config["sampling_rate"], sampling_rate)
 
@@ -64,7 +65,8 @@ async def detect(request: DetectRequest):
     if sampling_rate != config["sampling_rate"]:
         audio = resample_audio(request.audio, sampling_rate, config["sampling_rate"])
 
-    message = model.decode_wav(audio, config["sampling_rate"], phase_shift_decoding=config["phase_shift_decoding"])
+    with torch.no_grad():
+        message = model.decode_wav(audio, config["sampling_rate"], phase_shift_decoding=config["phase_shift_decoding"])
     try:
         message = message['messages'][0]
         message = [np.array(list(f"{val:08b}"), dtype=np.int32) for val in message]

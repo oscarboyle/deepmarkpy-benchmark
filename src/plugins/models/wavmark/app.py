@@ -45,7 +45,8 @@ async def embed(request: EmbedRequest):
     if sampling_rate != config["sampling_rate"]:
         audio = resample_audio(request.audio, sampling_rate, config["sampling_rate"])
 
-    watermarked_audio, _ = wavmark.encode_watermark(model, audio, watermark_data, show_progress=False)  
+    with torch.no_grad():
+        watermarked_audio, _ = wavmark.encode_watermark(model, audio, watermark_data, show_progress=False)  
     
     if sampling_rate != config["sampling_rate"]:
         watermarked_audio = resample_audio(watermarked_audio, config["sampling_rate"], sampling_rate)
@@ -59,7 +60,8 @@ async def detect(request: DetectRequest):
     sampling_rate = request.sampling_rate
     if sampling_rate != config["sampling_rate"]:
         audio = resample_audio(audio, sampling_rate, config["sampling_rate"])
-    message, _ = wavmark.decode_watermark(model, audio, show_progress=False)
+    with torch.no_grad():
+        message, _ = wavmark.decode_watermark(model, audio, show_progress=False)
     return {"watermark": message if message is None else message.tolist()}
 
 if __name__ == "__main__":

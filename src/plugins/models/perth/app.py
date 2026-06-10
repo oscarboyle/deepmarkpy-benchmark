@@ -20,6 +20,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger.info(f"Using device: {device}")
             
 model =  PerthImplicitWatermarker()
+if hasattr(model, 'model') and isinstance(model.model, torch.nn.Module):
+    model.model.to(device)
 
 try:
     config = load_config("config.json")
@@ -81,3 +83,11 @@ async def detect(request: DetectRequest):
             message = 0.0
 
     return {"watermark": message}
+
+if __name__ == "__main__":
+    app_port = int(os.getenv("APP_PORT", 7010))
+    host = os.environ.get("HOST", "0.0.0.0")
+
+    logger.info(f"Starting Perth service on port {app_port}")
+    import uvicorn
+    uvicorn.run(app, host=host, port=app_port)
