@@ -218,12 +218,13 @@ class BenchmarkReportGenerator:
             
             logger.info(f"Loaded benchmark statistics for {len(stats)} attacks")
             
-            chart_path = os.path.join(self.report_dir, "benchmark_chart.png")
+            chart_filename = f"benchmark_chart_{model_name}.png"
+            chart_path = os.path.join(self.report_dir, chart_filename)
             self.create_gradient_bar_chart(stats, chart_path)
             
-            latex_content = self.generate_latex_report(stats, model_name, "benchmark_chart.png")
+            latex_content = self.generate_latex_report(stats, model_name, chart_filename)
             
-            latex_path = os.path.join(self.report_dir, "benchmark_report.tex")
+            latex_path = os.path.join(self.report_dir, f"benchmark_report_{model_name}.tex")
             with open(latex_path, 'w') as f:
                 f.write(latex_content)
             

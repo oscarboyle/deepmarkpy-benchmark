@@ -33,7 +33,12 @@ class HighpassFilterAttack(BaseAttack):
         nyquist = 0.5 * sampling_rate
         normalized_cutoff = cutoff_freq / nyquist
 
-        b, a = signal.butter(order, normalized_cutoff, btype='highpass', analog=False)
-        filtered_signal = signal.lfilter(b, a, audio)
+        # b, a = signal.butter(order, normalized_cutoff, btype='highpass', analog=False)
+        # filtered_signal = signal.lfilter(b, a, audio)
+
+        #signal.butter not stable at low frequencies
+
+        sos = signal.butter(order, normalized_cutoff, fs=sampling_rate, btype='high', output='sos')
+        filtered_signal = signal.sosfilt(sos, audio)
 
         return filtered_signal

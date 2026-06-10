@@ -118,25 +118,32 @@ def main():
 
     results = benchmark.run(filepaths=filepaths, **args_dict)
 
-    with open("benchmark_results.json", "w") as fp:
+    results_filename = f"benchmark_results_{args.wm_model}.json"
+    stats_filename = f"benchmark_stats_{args.wm_model}.json"
+
+    with open(results_filename, "w") as fp:
         json.dump(to_json_safe(results), fp, indent=4)
 
-    logger.info("Benchmark completed. Results saved to benchmark_results.json")
+    logger.info(f"Benchmark completed. Results saved to {results_filename}")
 
     stats = benchmark.compute_mean_accuracy(results)
     flattened_stats = {attack: metrics["accuracy_mean"] for attack, metrics in stats.items()}
-    with open("benchmark_stats.json", "w") as fp:
+    
+    with open(stats_filename, "w") as fp:
         json.dump(to_json_safe(flattened_stats), fp, indent=4)
 
-    logger.info("Benchmark statistics saved to benchmark_stats.json")
+    logger.info(f"Benchmark statistics saved to {stats_filename}")
 
     try:
         logger.info("Generating benchmark report...")
+        # Pass the dynamic stats_filename to the report generator
         latex_path, chart_path = generate_benchmark_report(
-            stats_file="benchmark_stats.json",
+            stats_file=stats_filename, 
             model_name=args.wm_model,
             report_dir="report"
         )
+
+
         logger.info(f"Benchmark report generated: {latex_path}")
         logger.info(f"Chart saved: {chart_path}")
     except Exception as e:

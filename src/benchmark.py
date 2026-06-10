@@ -8,7 +8,7 @@ import librosa
 
 from plugin_manager import PluginManager
 from utils.utils import load_audio, snr
-from utils.metrics import pesq_wrapper, psnr, stoi_wrapper, si_sdr
+from utils.metrics import si_sdr, psnr #pesq_wrapper, stoi_wrapper, 
 
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class Benchmark:
         verbose=False,
         save_audio= False,
         output_dir="audio_processed",
-        calculate_quality_metrics=False,
+        calculate_quality_metrics=True,
         **kwargs,
     ):
         """
@@ -181,12 +181,26 @@ class Benchmark:
             watermarked_audio = model_instance.embed(
                 audio=audio, watermark_data=file_watermark, sampling_rate=sampling_rate
             ) 
+            psnr_embed = "N/A"
+            si_sdr_embed = "N/A"
+            if calculate_quality_metrics:
+                sr_scalar = int(sampling_rate) if isinstance(sampling_rate, (np.ndarray, list)) else sampling_rate
+                psnr_embed = psnr(audio, watermarked_audio)
+                si_sdr_embed = si_sdr(audio, watermarked_audio)
+                
+            results[filepath]["embedding_metrics"] = {
+                      
+                "psnr": psnr_embed,
+                "si_sdr": si_sdr_embed
+            }
+
 
             # Save watermarked audio
             if save_audio:
                 watermarked_filename = f"{base_filename}_watermarked.wav"
                 watermarked_path = os.path.join(output_dir, watermarked_filename)
                 sf.write(watermarked_path, watermarked_audio, sampling_rate) 
+
             # Apply each attack and compute metrics
             for attack_name in attack_types:
                 if attack_name not in self.attacks:
@@ -278,16 +292,22 @@ class Benchmark:
                 
 
                 sr_scalar = int(sampling_rate) if isinstance(sampling_rate, (np.ndarray, list)) else sampling_rate
-                stoi_val = "N/A"
-                pesq_val = "N/A"
+                # stoi_val = "N/A"
+                # pesq_val = "N/A"
+                psnr_atk_val = "N/A"
+                si_sdr_atk_val = "N/A"
                 if calculate_quality_metrics:
+                    
                     # Resample to 16kHz if needed (PESQ/STOI only support 8kHz/16kHz)
                     metrics_sr = 16000 if sr_scalar not in [8000, 16000] else sr_scalar
-                    ref = librosa.resample(audio, orig_sr=sr_scalar, target_sr=metrics_sr) if metrics_sr != sr_scalar else audio
-                    deg = librosa.resample(attacked_audio_metrics, orig_sr=sr_scalar, target_sr=metrics_sr) if metrics_sr != sr_scalar else attacked_audio_metrics
+                    # ref = librosa.resample(audio, orig_sr=sr_scalar, target_sr=metrics_sr) if metrics_sr != sr_scalar else audio
+                    # deg = librosa.resample(attacked_audio_metrics, orig_sr=sr_scalar, target_sr=metrics_sr) if metrics_sr != sr_scalar else attacked_audio_metrics
 
-                    stoi_val = stoi_wrapper(ref, deg, metrics_sr)
-                    pesq_val = pesq_wrapper(ref, deg, metrics_sr, 'wb')
+                    # stoi_val = stoi_wrapper(ref, deg, metrics_sr)
+                    # pesq_val = pesq_wrapper(ref, deg, metrics_sr, 'wb')
+
+                    psnr_atk_val = psnr(audio, attacked_audio_metrics)
+                    si_sdr_atk_val = si_sdr(audio, attacked_audio_metrics)
 
 
                 if is_zero_bit:
@@ -300,8 +320,8 @@ class Benchmark:
                     
                 results[filepath][attack_name] = {
                     "accuracy": accuracy,
-                    "stoi": stoi_val,
-                    "pesq": pesq_val
+                    "psnr_attack": psnr_atk_val,
+                    "si_sdr_attack": si_sdr_atk_val,
                     }
 
                 # Add confidence for models that return it
@@ -328,13 +348,18 @@ class Benchmark:
 
         for _, attack_dict in results.items():
             for attack_name, metrics in attack_dict.items():
+
+                if "accuracy" not in metrics:
+                    continue
+                
                 if attack_name not in attack_accuracies:
                     attack_accuracies[attack_name] = {
                         "accuracy": [],
                         "accuracy_cross_model": [],
                         "confidence": []
                     }
-
+                
+                
                 attack_accuracies[attack_name]["accuracy"].append(metrics["accuracy"])
 
                 if "accuracy_cross_model" in metrics:
