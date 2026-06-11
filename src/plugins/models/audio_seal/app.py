@@ -15,10 +15,13 @@ from utils.utils import load_config, resample_audio
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+# Add this near the top
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Update the model dictionary
 model = {
-    "generator": AudioSeal.load_generator("audioseal_wm_16bits"),
-    "detector": AudioSeal.load_detector("audioseal_detector_16bits"),
+    "generator": AudioSeal.load_generator("audioseal_wm_16bits").to(device),
+    "detector": AudioSeal.load_detector("audioseal_detector_16bits").to(device),
 }
 
 try:
@@ -48,15 +51,15 @@ async def embed(request: EmbedRequest):
 
     generator = model["generator"]
     wav = torch.tensor(audio, dtype=torch.float32)
-    wav = wav.unsqueeze(0).unsqueeze(0)
-    msg = torch.from_numpy(watermark_data).unsqueeze(0)  
+    wav = torch.tensor(audio, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(device)
+    msg = torch.from_numpy(watermark_data).unsqueeze(0).to(device)
 
     watermark = generator.get_watermark(
         wav, message=msg, sample_rate=config["sampling_rate"]
     )
 
     watermarked_audio = wav + watermark
-    watermarked_audio = watermarked_audio.detach().numpy()
+    watermarked_audio = watermarked_audio.cpu().detach().numpy()
     watermarked_audio = np.squeeze(watermarked_audio)
 
     if sampling_rate != config["sampling_rate"]:
@@ -82,7 +85,7 @@ async def detect(request: DetectRequest):
 
     detector = model["detector"]
     watermarked_audio = np.expand_dims(audio, axis=[0, 1])
-    watermarked_audio = torch.tensor(watermarked_audio, dtype=torch.float32)
+    watermarked_audio = torch.tensor(watermarked_audio, dtype=torch.float32).to(device)
 
     try:
         confidence, message = detector.detect_watermark(watermarked_audio, sampling_rate)
