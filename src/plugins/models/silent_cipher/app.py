@@ -49,7 +49,8 @@ async def embed(request: EmbedRequest):
     watermark_data = [int("".join(map(str, arr)), 2) for arr in watermark_data]
     with torch.no_grad():
         watermarked_audio, _ = model.encode_wav(audio, config["sampling_rate"], watermark_data)
-                                                
+    if isinstance(watermarked_audio, torch.Tensor):
+        watermarked_audio = watermarked_audio.squeeze().cpu().numpy()                                            
     if sampling_rate != config["sampling_rate"]:
         watermarked_audio = resample_audio(watermarked_audio, config["sampling_rate"], sampling_rate)
 
