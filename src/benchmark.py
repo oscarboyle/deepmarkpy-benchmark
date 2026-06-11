@@ -257,11 +257,13 @@ class Benchmark:
 
                 # Save attacked audio
                 if save_audio:
-                    if attacked_audio.ndim == 1:
-                        attacked_audio = np.expand_dims(attacked_audio, axis=1)
+                    audio_to_save = attacked_audio
+                    if audio_to_save.ndim == 1:
+                        audio_to_save = np.expand_dims(audio_to_save, axis=1)
+
                     attacked_filename = f"{base_filename}_{attack_name}.wav"
                     attacked_path = os.path.join(output_dir, attacked_filename)
-                    sf.write(attacked_path, attacked_audio, sampling_rate)
+                    sf.write(attacked_path, audio_to_save, sampling_rate)
                     if verbose:
                         logger.info(f"Saved attacked audio: {attacked_filename}")
                 
@@ -351,7 +353,7 @@ class Benchmark:
 
                 if "accuracy" not in metrics:
                     continue
-                
+
                 if attack_name not in attack_accuracies:
                     attack_accuracies[attack_name] = {
                         "accuracy": [],
