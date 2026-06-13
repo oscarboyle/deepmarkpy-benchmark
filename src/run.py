@@ -4,34 +4,40 @@ import os
 
 import logging
 
-from benchmark import Benchmark
+from benchmark import Benchmark, to_json_safe
 from utils.report_generator import generate_benchmark_report
+import numpy as np
+import sys 
 
+# Set up logging to go to BOTH the terminal and a file called "benchmark.log"
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    level=logging.INFO, 
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    handlers=[
+        logging.FileHandler("benchmark.log", mode="a"), # Appends to a log file
+        logging.StreamHandler(sys.stdout)               # Still prints to the terminal
+    ]
 )
 logger = logging.getLogger(__name__)
 
 
-import numpy as np
 
-
-def to_json_safe(obj):
-    """
-    Recursively convert numpy types to native Python types
-    so json.dump does not crash.
-    """
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    if isinstance(obj, (np.float32, np.float64)):
-        return float(obj)
-    if isinstance(obj, (np.int32, np.int64)):
-        return int(obj)
-    if isinstance(obj, dict):
-        return {k: to_json_safe(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [to_json_safe(v) for v in obj]
-    return obj
+# def to_json_safe(obj):
+#     """
+#     Recursively convert numpy types to native Python types
+#     so json.dump does not crash.
+#     """
+#     if isinstance(obj, np.ndarray):
+#         return obj.tolist()
+#     if isinstance(obj, (np.float32, np.float64)):
+#         return float(obj)
+#     if isinstance(obj, (np.int32, np.int64)):
+#         return int(obj)
+#     if isinstance(obj, dict):
+#         return {k: to_json_safe(v) for k, v in obj.items()}
+#     if isinstance(obj, list):
+#         return [to_json_safe(v) for v in obj]
+#     return obj
     
 def main():
     benchmark = Benchmark()
@@ -94,6 +100,10 @@ def main():
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+        #Mute noisy libraries
+        logging.getLogger("numba").setLevel(logging.WARNING)
+        logging.getLogger("matplotlib").setLevel(logging.WARNING)
+        logging.getLogger("PIL").setLevel(logging.WARNING)
         logger.debug("Verbose logging enabled.")
 
     args_dict = vars(args)
@@ -116,10 +126,16 @@ def main():
         logger.error(f"Error accessing audio directory {args.wav_files_dir}: {e}")
         return
 
-    results = benchmark.run(filepaths=filepaths, **args_dict)
+    folder_name = os.path.basename(os.path.normpath(args.wav_files_dir))
 
-    results_filename = f"benchmark_results_{args.wm_model}.json"
-    stats_filename = f"benchmark_stats_{args.wm_model}.json"
+    results_filename = f"benchmark_results_{args.wm_model}_{folder_name}.json"
+    stats_filename = f"benchmark_stats_{args.wm_model}_{folder_name}.json"
+
+    results = benchmark.run(
+        filepaths=filepaths, 
+        results_filename=results_filename, 
+        **args_dict
+    )
 
     with open(results_filename, "w") as fp:
         json.dump(to_json_safe(results), fp, indent=4)

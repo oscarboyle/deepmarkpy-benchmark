@@ -1,0 +1,8 @@
+{
+    "name": "DummyModel",
+    "type": "model",
+    "sampling_rate": 16000,
+    "watermark_size": 16,
+    "returns_confidence": false,
+    "is_zero_bit": false
+}

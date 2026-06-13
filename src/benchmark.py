@@ -5,6 +5,7 @@ import os
 import numpy as np
 import soundfile as sf
 import librosa
+import json
 
 from plugin_manager import PluginManager
 from utils.utils import load_audio, snr
@@ -12,6 +13,23 @@ from utils.metrics import si_sdr, psnr #pesq_wrapper, stoi_wrapper,
 
 
 logger = logging.getLogger(__name__)
+
+def to_json_safe(obj):
+    """
+    Recursively convert numpy types to native Python types
+    so json.dump does not crash.
+    """
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, (np.float32, np.float64)):
+        return float(obj)
+    if isinstance(obj, (np.int32, np.int64)):
+        return int(obj)
+    if isinstance(obj, dict):
+        return {k: to_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [to_json_safe(v) for v in obj]
+    return obj
 
 
 class Benchmark:
@@ -106,6 +124,7 @@ class Benchmark:
         save_audio= False,
         output_dir="audio_processed",
         calculate_quality_metrics=True,
+        results_filename=None,
         **kwargs,
     ):
         """
@@ -136,6 +155,13 @@ class Benchmark:
         # If user doesn't specify attacks, use them all
         attack_types = attack_types or list(self.attacks.keys())
         results = {}
+        if results_filename and os.path.exists(results_filename):
+            try:
+                with open(results_filename, "r") as fp:
+                    results = json.load(fp)
+                logger.info(f"Loaded existing progress from {results_filename}. Checking for missing attacks...")
+            except Exception as e:
+                logger.warning(f"Could not load existing results from {results_filename}. Starting fresh. Error: {e}")
 
         if wm_model not in self.models:
             raise ValueError(
@@ -161,9 +187,30 @@ class Benchmark:
         }
 
         for filepath in filepaths:
+
+            file_results = results.get(filepath, {})
+            
+            # Figure out which attacks actually need to be run
+            attacks_to_run = []
+            for atk in attack_types:
+                if atk not in file_results:
+                    attacks_to_run.append(atk)
+                elif atk  in file_results and verbose:
+                    logger.info(f"  Skipping attack '{atk}' for {os.path.basename(filepath)} (already processed).")
+
+            # If all requested attacks are already processed, skip the file entirely!
+            if not attacks_to_run:
+                if verbose:
+                    logger.info(f"Skipping {os.path.basename(filepath)} entirely. All requested attacks are complete.")
+                continue
+
             if verbose:
-                logger.info(f"\nProcessing file: {filepath}")
-            results[filepath] = {}
+                logger.info(f"\nProcessing file: {filepath} with attacks: {attacks_to_run}")
+            
+            # If the file wasn't in the JSON at all, initialize its dictionary.
+            # If it was, we retain the old data and will just append to it later.
+            if filepath not in results:
+                results[filepath] = {}
 
             # Get base filename without extension
             base_filename = os.path.splitext(os.path.basename(filepath))[0]
@@ -202,7 +249,7 @@ class Benchmark:
                 sf.write(watermarked_path, watermarked_audio, sampling_rate) 
 
             # Apply each attack and compute metrics
-            for attack_name in attack_types:
+            for attack_name in attacks_to_run:
                 if attack_name not in self.attacks:
                     logger.warning(f"Attack '{attack_name}' not found. Skipping.")
                     continue
@@ -332,6 +379,16 @@ class Benchmark:
 
                 if attack_name == "CrossModelAttack":
                     results[filepath][attack_name]["accuracy_cross_model"] = different_accuracy
+
+        # Incrementally save the results after all attacks on the current file finish
+            if results_filename:
+                try:
+                    with open(results_filename, "w") as fp:
+                        json.dump(to_json_safe(results), fp, indent=4)
+                    if verbose:
+                        logger.info(f"Incrementally saved progress to {results_filename}")
+                except Exception as e:
+                    logger.error(f"Failed to incrementally save results for {filepath}: {e}")
 
         return results
 
