@@ -7,6 +7,7 @@ import numpy as np
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
+import torch
 
 from aware.service import embed_watermark, detect_watermark
 from aware.utils.models import load
