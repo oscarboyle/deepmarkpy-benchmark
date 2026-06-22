@@ -12,11 +12,11 @@ class Aware44kModel(BaseModel):
         super().__init__()
 
         # Determine the APP PORT from environment variables
-        port = os.getenv("AWARE44k_PORT", "9005")
+        port = os.getenv("AWARE44K_PORT", "9005")
 
         if not port:
-            logger.error("AWARE44k_PORT environment variable not set and no default provided.")
-            raise ValueError("AWARE44k_PORT must be set")
+            logger.error("AWARE44K_PORT environment variable not set and no default provided.")
+            raise ValueError("AWARE44K_PORT must be set")
 
         self.base_url = f"http://localhost:{port}"
         logger.info(f"AwareModel initialized. Target API: {self.base_url}")

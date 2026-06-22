@@ -41,9 +41,9 @@ services:
       context: .
       dockerfile: src/plugins/models/aware44k/Dockerfile
     ports:
-      - "${AWARE44k_PORT}:${AWARE44k_PORT}"
+      - "${AWARE44K_PORT}:${AWARE44K_PORT}"
     environment:
-      - APP_PORT=${AWARE44k_PORT}      
+      - APP_PORT=${AWARE44K_PORT}      
 
   vae:
     build:
