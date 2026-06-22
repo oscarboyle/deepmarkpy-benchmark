@@ -10,8 +10,8 @@ from pydantic import BaseModel
 import torch
 import json
 
-from aware44k.service import embed_watermark, detect_watermark
-from aware44k.utils.models import load
+from aware.service import embed_watermark, detect_watermark
+from aware.utils.models import load
 
 
 logger = logging.getLogger(__name__)
