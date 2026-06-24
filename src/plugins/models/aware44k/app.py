@@ -112,7 +112,7 @@ async def detect(request: DetectRequest):
         logger.warning(f"Failed to count FLOPs for detection: {e}")
 
     try:
-        detected_watermark, confidence = detect_watermark(
+        detected_watermark, confidence, raw_activation = detect_watermark(
             audio,
             sampling_rate,
             detector
@@ -130,7 +130,8 @@ async def detect(request: DetectRequest):
 
     return {
         "watermark": detected_watermark.tolist() if detected_watermark is not None else None,
-        "confidence": float(confidence)
+        "confidence": float(confidence),
+        "raw_activation": float(raw_activation)
     }
 
 

@@ -172,6 +172,7 @@ class Benchmark:
         model_instance = model_cls()
         model_config = self.models[wm_model]["config"] or {}
         returns_confidence = model_config.get("returns_confidence", False)
+        returns_rawActivation = model_config.get("returns_rawActivation", False)
         is_zero_bit = model_config.get("is_zero_bit", False)
 
         if sampling_rate is None:
@@ -315,7 +316,10 @@ class Benchmark:
                         logger.info(f"Saved attacked audio: {attacked_filename}")
                 
                 confidence = None
-                if returns_confidence:
+                raw_activation = None
+                if returns_confidence and returns_rawActivation:
+                    detected_message, confidence,raw_activation = model_instance.detect(attacked_audio, sampling_rate)
+                elif returns_confidence:
                     detected_message, confidence = model_instance.detect(attacked_audio, sampling_rate)
                 else:
                     detected_message = model_instance.detect(attacked_audio, sampling_rate)
@@ -376,6 +380,10 @@ class Benchmark:
                 # Add confidence for models that return it
                 if confidence is not None:
                     results[filepath][attack_name]["confidence"] = confidence
+                
+                # Add raw activations for models that return it
+                if raw_activation is not None:
+                    results[filepath][attack_name]["raw_activation"] = raw_activation
 
                 if attack_name == "CrossModelAttack":
                     results[filepath][attack_name]["accuracy_cross_model"] = different_accuracy
