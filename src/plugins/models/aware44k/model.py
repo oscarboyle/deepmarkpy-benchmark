@@ -63,6 +63,11 @@ class Aware44kModel(BaseModel):
         if "watermark" not in response_data:
             logger.error("'/detect' response did not contain 'watermark' key.")
             raise KeyError("Missing 'watermark' in response from /detect")
+        
+        
+        if "raw_activation" not in response_data:
+            logger.error("'/detect' response did not contain 'raw_activation' key.")
+            raise KeyError("Missing 'raw_activation' in response from /detect")
 
         # Handle potential None value from the API
         watermark = response_data["watermark"]
