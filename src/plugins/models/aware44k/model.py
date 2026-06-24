@@ -67,7 +67,8 @@ class Aware44kModel(BaseModel):
         # Handle potential None value from the API
         watermark = response_data["watermark"]
         confidence = response_data["confidence"]
+        raw_activation = response_data["raw_activation"]
 
 
         watermark_array = np.array(watermark) if watermark is not None else None
-        return watermark_array, confidence
+        return watermark_array, confidence, raw_activation
