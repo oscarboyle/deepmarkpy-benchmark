@@ -391,6 +391,7 @@ class Benchmark:
         # Incrementally save the results after all attacks on the current file finish
             if results_filename:
                 try:
+                    print(detected_message)
                     with open(results_filename, "w") as fp:
                         json.dump(to_json_safe(results), fp, indent=4)
                     if verbose:

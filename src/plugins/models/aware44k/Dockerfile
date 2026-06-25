@@ -23,7 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY src/plugins/models/aware44k/app.py .
 COPY src/plugins/models/aware44k/model.py .
-COPY src/plugins/models/aware44k/config.json .
 COPY src/utils ./utils
 
 # Expose the port defined by the build argument/environment variable

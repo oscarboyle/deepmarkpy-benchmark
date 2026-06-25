@@ -1,9 +1,9 @@
 {
-    "name": "AWARE44k",
+    "name": "AWARE44k-r1c3",
     "type": "model",
     "variant": "docker",
     "sampling_rate": 44100,
-    "watermark_size": 20,
+    "watermark_size": 8,
     "returns_confidence": true,
     "returns_rawActivation": true,
     "is_zero_bit": false

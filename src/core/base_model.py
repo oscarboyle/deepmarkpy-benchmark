@@ -38,7 +38,7 @@ class BaseModel(abc.ABC):
 
         self.base_url = None # subclasses must set this
     
-    def _make_request(self, endpoint: str, json_data: dict, method: str = "POST", timeout: int = 300) -> dict:
+    def _make_request(self, endpoint: str, json_data: dict, method: str = "POST", timeout: int = 500) -> dict:
         """
         Helper method to make HTTP requests to the model's backend service.
 

@@ -43,7 +43,9 @@ services:
     ports:
       - "${AWARE44K_PORT}:${AWARE44K_PORT}"
     environment:
-      - APP_PORT=${AWARE44K_PORT}      
+      - APP_PORT=${AWARE44K_PORT}    
+    volumes:
+      - ./src/plugins/models/aware44k/config.json:/app/config.json  
 
   vae:
     build:
