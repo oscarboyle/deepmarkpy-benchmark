@@ -1,5 +1,5 @@
 {
     "model_type_dac": "44khz",
     "target_sampling_rate_dac": 44100,
-    "n_codebooks_dac": 5
+    "n_codebooks_dac": 6
 }
