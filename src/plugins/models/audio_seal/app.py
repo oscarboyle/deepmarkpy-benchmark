@@ -39,6 +39,27 @@ class DetectRequest(BaseModel):
     audio: List[float]
     sampling_rate: int
 
+class WatermarkRequest(BaseModel):
+    audio: List[float]
+    watermark_data: List[int]
+    sampling_rate: int
+    mode: str = "native"  # "native" | "banded"
+
+def _match_len(y: np.ndarray, n: int) -> np.ndarray:
+    """resample_poly returns ceil(n*up/down); force exact length."""
+    if len(y) > n:
+        return y[:n]
+    if len(y) < n:
+        return np.pad(y, (0, n - len(y)))
+    return y
+
+def _raw_watermark(audio: np.ndarray, msg: torch.Tensor) -> np.ndarray:
+    """Run the generator, return the residual at the rate it was fed."""
+    wav = torch.tensor(audio, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(device)
+    with torch.no_grad():
+        wm = model["generator"].get_watermark(wav, message=msg)
+    return wm.squeeze().cpu().numpy().astype(np.float64)
+
     
 @app.post("/embed")
 async def embed(request: EmbedRequest):
@@ -96,6 +117,38 @@ async def detect(request: DetectRequest):
     message = message.squeeze().cpu().numpy()
     return {"watermark": message if message is None else message.tolist(),
             "confidence": float(confidence)}
+
+
+@app.post("/watermark")
+async def watermark(request: WatermarkRequest):
+    """Return the raw additive watermark residual, at the CALLER's sample rate.
+ 
+    mode="native"  -> feed the model the audio as-is. Learned filters have a
+                      fixed impulse response in samples, so at 44.1 kHz the
+                      watermark's spectral content shifts up by 44100/16000.
+    mode="banded"  -> downsample, watermark, upsample the residual. The
+                      anti-aliasing filter confines the watermark to 0-8 kHz.
+    """
+    audio = np.nan_to_num(np.asarray(request.audio, dtype=np.float64),
+                          nan=0.0, posinf=1.0, neginf=-1.0)
+    sr = request.sampling_rate
+    msg = torch.from_numpy(np.asarray(request.watermark_data)).unsqueeze(0).to(device)
+ 
+    if request.mode == "banded" and sr != MODEL_SR:
+        g = np.gcd(sr, MODEL_SR)
+        up, down = sr // g, MODEL_SR // g          # 44100/16000 -> 441/160
+        wm16 = _raw_watermark(resample_poly(audio, down, up), msg)
+        wm = _match_len(resample_poly(wm16, up, down), len(audio))
+    elif request.mode == "banded":
+        wm = _raw_watermark(audio, msg)            # already at model rate
+    elif request.mode == "native":
+        wm = _raw_watermark(audio, msg)
+    else:
+        raise ValueError(f"unknown mode {request.mode!r}")
+ 
+    return {"watermark_signal": wm.tolist(), "sampling_rate": sr, "mode": request.mode}
+ 
+
 
 if __name__ == "__main__":
     # Use the default as a fallback if APP_PORT is not set in the environment
