@@ -1,5 +1,6 @@
 import logging
 
+import librosa
 import numpy as np
 from pystoi import stoi
 from pesq import pesq
@@ -141,4 +142,64 @@ def pesq_wrapper(reference: np.ndarray, degraded: np.ndarray,
         return pesq(fs, reference, degraded, mode)
     except Exception as e:
         logger.warning(f"PESQ calculation failed: {e}")
+        return None
+
+VISQOL_SR = 48000
+
+_visqol_api = None
+_visqol_unavailable = False
+
+
+def _get_visqol_api():
+    """Lazily build and cache a single audio-mode VisqolApi instance."""
+    global _visqol_api, _visqol_unavailable
+    if _visqol_unavailable:
+        return None
+    if _visqol_api is not None:
+        return _visqol_api
+    try:
+        from visqol import VisqolApi
+    except ImportError:
+        logger.info("visqol not installed; ViSQOL scores will be skipped.")
+        _visqol_unavailable = True
+        return None
+    api = VisqolApi()
+    api.create(mode="audio")
+    _visqol_api = api
+    return api
+
+
+def visqol_wrapper(reference: np.ndarray, degraded: np.ndarray, fs: int):
+    """
+    ViSQOL in audio mode. Audio mode requires exactly 48 kHz, so anything
+    else is resampled up.
+
+    Returns MOS-LQO (1.0-5.0), or None if the signal is too short, the
+    computation fails, or the visqol package is not installed.
+    """
+    reference, degraded = trim_audio_to_match(reference, degraded)
+
+    if fs != VISQOL_SR:
+        reference = librosa.resample(reference, orig_sr=fs, target_sr=VISQOL_SR)
+        degraded = librosa.resample(degraded, orig_sr=fs, target_sr=VISQOL_SR)
+
+    # Audio mode scores in patches; under ~1s it errors out inside the
+    # C++ layer rather than returning anything usable.
+    if len(reference) < VISQOL_SR:
+        logger.warning("ViSQOL: audio too short (<1s), skipping")
+        return None
+
+    api = _get_visqol_api()
+    if api is None:
+        return None
+
+    try:
+        result = api.measure_from_arrays(
+            reference.astype(np.float64),
+            degraded.astype(np.float64),
+            VISQOL_SR,
+        )
+        return result.moslqo
+    except (RuntimeError, ValueError, IndexError) as e:
+        logger.warning(f"ViSQOL calculation failed: {e}")
         return None

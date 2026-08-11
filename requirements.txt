@@ -74,3 +74,4 @@ descript-audio-codec==1.0.0
 audiocomplib==0.2.0
 webrtcvad 
 resampy
+visqol-python[fftw]

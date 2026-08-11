@@ -9,7 +9,7 @@ import json
 
 from plugin_manager import PluginManager
 from utils.utils import load_audio, snr
-from utils.metrics import si_sdr, psnr #pesq_wrapper, stoi_wrapper, 
+from utils.metrics import si_sdr, psnr, visqol_wrapper  #pesq_wrapper, stoi_wrapper, 
 
 
 logger = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ class Benchmark:
         attack_types=None,
         sampling_rate=None,
         verbose=False,
-        save_audio= False,
+        save_audio= True,
         output_dir="audio_processed",
         calculate_quality_metrics=True,
         results_filename=None,
@@ -231,15 +231,19 @@ class Benchmark:
             ) 
             psnr_embed = "N/A"
             si_sdr_embed = "N/A"
+            visqol_embed = "N/A"
+            
             if calculate_quality_metrics:
                 sr_scalar = int(sampling_rate) if isinstance(sampling_rate, (np.ndarray, list)) else sampling_rate
                 psnr_embed = psnr(audio, watermarked_audio)
                 si_sdr_embed = si_sdr(audio, watermarked_audio)
-                
+                visqol_embed = visqol_wrapper(audio, watermarked_audio, sr_scalar)
+
             results[filepath]["embedding_metrics"] = {
                       
                 "psnr": psnr_embed,
-                "si_sdr": si_sdr_embed
+                "si_sdr": si_sdr_embed,
+                "visqol": visqol_embed
             }
 
 
@@ -349,6 +353,7 @@ class Benchmark:
                 # pesq_val = "N/A"
                 psnr_atk_val = "N/A"
                 si_sdr_atk_val = "N/A"
+                visqol_atk_val = "N/A"
                 if calculate_quality_metrics:
                     
                     # Resample to 16kHz if needed (PESQ/STOI only support 8kHz/16kHz)
