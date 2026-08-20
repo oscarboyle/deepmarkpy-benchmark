@@ -1,0 +1,10 @@
+{
+    "name": "AudioSeal44k",
+    "type": "model",
+    "variant": "docker",
+    "sampling_rate": 44100,
+    "watermark_size": 16,
+    "returns_confidence": true,
+    "is_zero_bit": false,
+    "detection_threshold": 0.5
+}
