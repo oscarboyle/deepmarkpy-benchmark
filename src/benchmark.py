@@ -121,7 +121,7 @@ class Benchmark:
         attack_types=None,
         sampling_rate=None,
         verbose=False,
-        save_audio= True,
+        save_audio= False,
         output_dir="audio_processed",
         calculate_quality_metrics=True,
         results_filename=None,
